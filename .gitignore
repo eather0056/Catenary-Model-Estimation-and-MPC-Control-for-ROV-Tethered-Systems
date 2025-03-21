@@ -170,5 +170,8 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-#partial videos files
+# partial videos files
 media/videos/Animation/480p15/partial_movie_files
+
+# Data files
+data/

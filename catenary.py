@@ -1,3 +1,5 @@
+# This code return a basic catenary with a interactive 3d plot that can be control by keyboard arrows
+
 from pympc.models.catenary import Catenary
 from numpy import array
 import matplotlib.pyplot as plt

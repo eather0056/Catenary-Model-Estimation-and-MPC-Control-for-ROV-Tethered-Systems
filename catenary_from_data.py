@@ -1,7 +1,8 @@
-import pandas as pd
+# This script 1 - directly use the data to animate the fully augmented catenary model import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import pandas as pd
 from pympc.models.catenary import Catenary
 import time
 import imageio
@@ -59,8 +60,9 @@ def transform_catenary(P0, P1, catenary, theta, gamma):
     
     return catenary_rotated_gamma
 
+datasetname = "data.csv"
 # Load CSV file
-data_path = "data.csv"
+data_path = f"Data/{datasetname}"
 df = pd.read_csv(data_path)
 
 # Create Catenary object
@@ -121,7 +123,7 @@ for index, row in df.iterrows():
     plt.pause(0.05)  # Real-time update speed
 
 # Convert saved frames to GIF
-gif_path = "catenary_simulation.gif"
+gif_path = f"catenary_simulation_{datasetname}.gif"
 with imageio.get_writer(gif_path, mode='I', duration=0.05) as writer:
     for frame in frames:
         image = imageio.imread(frame)

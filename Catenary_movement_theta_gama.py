@@ -1,3 +1,5 @@
+# This script calculates the movement of a catenary (a curve formed by a hanging flexible chain or cable) 
+# based on the angles theta and gamma. 
 import time
 import numpy as np
 import matplotlib.pyplot as plt
