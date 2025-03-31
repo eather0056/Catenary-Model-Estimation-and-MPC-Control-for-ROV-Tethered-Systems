@@ -7,61 +7,10 @@ from pympc.models.catenary import Catenary
 import time
 import imageio
 import os
+from catenary_transform import transform_catenary
 
-def rodrigues_rotation(v, k, theta):
-    """Apply Rodrigues' rotation formula to vector v around axis k by theta."""
-    k = k / np.linalg.norm(k)  # Ensure unit vector
-    return v * np.cos(theta) + np.cross(k, v) * np.sin(theta) + k * np.dot(k, v) * (1 - np.cos(theta))
-
-def transform_catenary(P0, P1, catenary, theta, gamma):
-    """Apply Theta and Gamma rotation transformations to a catenary."""
-    def compute_catenary(start, end):
-        """Compute catenary points between start and end."""
-        out = catenary(start, end)
-        if out[3] is not None:
-            return out[3]
-        return np.array([start, end])
-    
-    # Compute standard catenary
-    catenary_standard = compute_catenary(P0, P1)
-    
-    # Compute vector P0 → P1
-    v = P1 - P0
-    
-    # Compute Theta rotation axis
-    z = np.array([0, 0, 1])  # World Z-axis
-    x = v.copy()
-    x[2] = 0  # Project v onto XY-plane
-    if np.linalg.norm(x) < 1e-9:
-        x = np.array([1., 0., 0.])
-    else:
-        x = x / np.linalg.norm(x)
-    k_theta = np.cross(x, z)
-    if np.linalg.norm(k_theta) < 1e-9:
-        k_theta = np.array([0., 1., 0.])
-    else:
-        k_theta = k_theta / np.linalg.norm(k_theta)
-    
-    # Compute rotated P1' for Theta
-    P1_prime = P0 + rodrigues_rotation(v, k_theta, theta)
-    catenary_rotated_theta = compute_catenary(P0, P1_prime)
-    
-    # Apply inverse theta rotation to get transformed catenary (P0-P1)
-    catenary_transformed = np.array([P0 + rodrigues_rotation(q - P0, k_theta, -theta) for q in catenary_rotated_theta])
-    
-    # Define the new rotation axis as the vector from P0 to P1 (normalized)
-    k_gamma = P1 - P0
-    k_gamma = k_gamma / np.linalg.norm(k_gamma)  # Normalize the pivot axis
-    
-    # Rotate each point in the transformed catenary around P0P1 vector
-    catenary_rotated_gamma = np.array([
-        P0 + rodrigues_rotation(q - P0, k_gamma, gamma) for q in catenary_transformed
-    ])
-    
-    return catenary_rotated_gamma
-
-datasetname = "data.csv"
 # Load CSV file
+datasetname = "data.csv"
 data_path = f"Data/{datasetname}"
 df = pd.read_csv(data_path)
 
@@ -98,7 +47,7 @@ for index, row in df.iterrows():
     gamma = row['Gamma']
     
     # Compute transformed catenary
-    catenary_final = transform_catenary(P0, P1, catenary, theta, gamma)
+    _, _, _, catenary_final = transform_catenary(P0, P1, catenary, theta, gamma)
     
     # Clear previous plot and update
     ax.clear()
