@@ -7,38 +7,38 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import r2_score
 from pysr import PySRRegressor
 
-# === Step 1: Load and Combine Training Datasets ===
-train_files = [
-    "Data/L_dynamique6x100dis2_0033.csv",  
-    "Data/L_dynamique6x100dis2_0034.csv",  
-    "Data/L_dynamique6x100dis2_0035.csv",  
-    "Data/L_dynamique6x200dis2_0030.csv",  
-    "Data/L_dynamique6x200dis2_0031.csv",  
-    "Data/L_dynamique6x200dis2_0032.csv",  
-    "Data/L_dynamique6y100dis1_0018.csv",  
-    "Data/L_dynamique6y100dis1_0019.csv",  
-    "Data/L_dynamique6y100dis1_0020.csv",  
-    "Data/L_dynamique6y100dis2_0021.csv",  
-    "Data/L_dynamique6y100dis2_0022.csv",  
-    "Data/L_dynamique6y100dis2_0023.csv",  
-    "Data/L_dynamique6y200dis1_0025.csv",  
-    "Data/L_dynamique6y200dis1_0026.csv",  
-    "Data/L_dynamique6y200dis2_0027.csv",  
-    "Data/L_dynamique6y200dis2_0028.csv",  
-    "Data/L_dynamique6y200dis2_0029.csv"  
-]
-train_dfs = [pd.read_csv(f) for f in train_files]
-df_train = pd.concat(train_dfs, ignore_index=True)
-df_train = df_train.dropna(subset=['Theta', 'Gamma'])
+# # === Step 1: Load and Combine Training Datasets ===
+# train_files = [
+#     "Data/L_dynamique6x100dis2_0033.csv",  
+#     "Data/L_dynamique6x100dis2_0034.csv",  
+#     "Data/L_dynamique6x100dis2_0035.csv",  
+#     "Data/L_dynamique6x200dis2_0030.csv",  
+#     "Data/L_dynamique6x200dis2_0031.csv",  
+#     "Data/L_dynamique6x200dis2_0032.csv",  
+#     "Data/L_dynamique6y100dis1_0018.csv",  
+#     "Data/L_dynamique6y100dis1_0019.csv",  
+#     "Data/L_dynamique6y100dis1_0020.csv",  
+#     "Data/L_dynamique6y100dis2_0021.csv",  
+#     "Data/L_dynamique6y100dis2_0022.csv",  
+#     "Data/L_dynamique6y100dis2_0023.csv",  
+#     "Data/L_dynamique6y200dis1_0025.csv",  
+#     "Data/L_dynamique6y200dis1_0026.csv",  
+#     "Data/L_dynamique6y200dis2_0027.csv",  
+#     "Data/L_dynamique6y200dis2_0028.csv",  
+#     "Data/L_dynamique6y200dis2_0029.csv"  
+# ]
+# train_dfs = [pd.read_csv(f) for f in train_files]
+# df_train = pd.concat(train_dfs, ignore_index=True)
+# df_train = df_train.dropna(subset=['Theta', 'Gamma'])
 
 model_sym_theta = PySRRegressor.from_file(
-    run_directory="outputs/20250331_152142_L2XeZk",
+    run_directory="outputs/20250402_110519_8MxAEc",
     model_selection="accuracy", 
 )
 
 model_sym_gamma = PySRRegressor.from_file(
-    run_directory="outputs/20250331_152142_L2XeZk",
-    model_selection="best"
+    run_directory="outputs/20250402_135003_WIAuIp",
+    model_selection="accuracy"
 )
 
 # Show the best equation based on lowest loss
@@ -60,76 +60,78 @@ def extract_features(df):
     speed_mag = np.linalg.norm(V1, axis=1).reshape(-1, 1)
     features = np.hstack([P0, P1, V1, rel_vec, cable_len, speed_mag])
     return features
-X_train = extract_features(df_train)
-y_theta_train = df_train['Theta'].values
-y_gamma_train = df_train['Gamma'].values
-def interpret_training(model, X, y, label):
-    y_pred = model.predict(X)
-    error = y_pred - y
 
-    plt.figure(figsize=(16, 8))
 
-    # 1. Actual vs Predicted
-    plt.subplot(1, 2, 1)
-    plt.scatter(y, y_pred, alpha=0.4, label=label)
-    plt.plot([min(y), max(y)], [min(y), max(y)], 'r--', label="Ideal")
-    plt.xlabel(f"{label} Actual")
-    plt.ylabel(f"{label} Predicted")
-    plt.title(f"{label} - Predicted vs Actual (Training)")
-    plt.legend()
+# X_train = extract_features(df_train)
+# y_theta_train = df_train['Theta'].values
+# y_gamma_train = df_train['Gamma'].values
+# def interpret_training(model, X, y, label):
+#     y_pred = model.predict(X)
+#     error = y_pred - y
 
-    # 2. Residuals
-    plt.subplot(1, 2, 2)
-    plt.hist(error, bins=50, color='purple', alpha=0.7)
-    plt.axvline(0, color='black', linestyle='--')
-    plt.xlabel("Prediction Error")
-    plt.ylabel("Count")
-    plt.title(f"{label} - Residual Distribution")
+#     plt.figure(figsize=(16, 8))
 
-    plt.tight_layout()
-    plt.show()
+#     # 1. Actual vs Predicted
+#     plt.subplot(1, 2, 1)
+#     plt.scatter(y, y_pred, alpha=0.4, label=label)
+#     plt.plot([min(y), max(y)], [min(y), max(y)], 'r--', label="Ideal")
+#     plt.xlabel(f"{label} Actual")
+#     plt.ylabel(f"{label} Predicted")
+#     plt.title(f"{label} - Predicted vs Actual (Training)")
+#     plt.legend()
 
-    # Optional: Show top 5 equations from Pareto front
-    print(f"\nTop 5 equations for {label}:")
-    print(model)
+#     # 2. Residuals
+#     plt.subplot(1, 2, 2)
+#     plt.hist(error, bins=50, color='purple', alpha=0.7)
+#     plt.axvline(0, color='black', linestyle='--')
+#     plt.xlabel("Prediction Error")
+#     plt.ylabel("Count")
+#     plt.title(f"{label} - Residual Distribution")
 
-# Plot training interpretation for Theta
-interpret_training(model_sym_theta, X_train, y_theta_train, label="Theta")
+#     plt.tight_layout()
+#     plt.show()
 
-# Plot training interpretation for Gamma
-interpret_training(model_sym_gamma, X_train, y_gamma_train, label="Gamma")
+#     # Optional: Show top 5 equations from Pareto front
+#     print(f"\nTop 5 equations for {label}:")
+#     print(model)
 
-def plot_convergence(model, label):
-    results = model.equation_search_results
-    if results.emplty:
-        print(f"No convergence data available for {label}.")
-        return
+# # Plot training interpretation for Theta
+# interpret_training(model_sym_theta, X_train, y_theta_train, label="Theta")
+
+# # Plot training interpretation for Gamma
+# interpret_training(model_sym_gamma, X_train, y_gamma_train, label="Gamma")
+
+# def plot_convergence(model, label):
+#     results = model.equation_search_results
+#     if results.emplty:
+#         print(f"No convergence data available for {label}.")
+#         return
     
-    complexities = results['complexity']
-    losses = results['loss']
-    scores = results.get('score', None)
+#     complexities = results['complexity']
+#     losses = results['loss']
+#     scores = results.get('score', None)
 
-    plt.figure(figsize=(10,6))
-    plt.scatter(complexities, losses, c='blue', alpha=0.6, label="Equations")
+#     plt.figure(figsize=(10,6))
+#     plt.scatter(complexities, losses, c='blue', alpha=0.6, label="Equations")
 
-    # Highlight the best equation
-    best = results.loc[results['loss'].indxmin()]
-    plt.scatter([best['complexity']], [best['loss']], color='red', s=80, label="Best Equation")
+#     # Highlight the best equation
+#     best = results.loc[results['loss'].indxmin()]
+#     plt.scatter([best['complexity']], [best['loss']], color='red', s=80, label="Best Equation")
 
-    plt.title(f"{label} - Convergence Plot\n(complexity vs loss)")
-    plt.xlabel("Equation Complexity")
-    plt.ylabel("loss")
-    plt.grid()
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
+#     plt.title(f"{label} - Convergence Plot\n(complexity vs loss)")
+#     plt.xlabel("Equation Complexity")
+#     plt.ylabel("loss")
+#     plt.grid()
+#     plt.legend()
+#     plt.tight_layout()
+#     plt.show()
     
 
-# Plot convergence for Theta
-plot_convergence(model_sym_theta, label="Theta")
+# # Plot convergence for Theta
+# plot_convergence(model_sym_theta, label="Theta")
 
-# Plot convergence for Gamma
-plot_convergence(model_sym_gamma, label="Gamma")
+# # Plot convergence for Gamma
+# plot_convergence(model_sym_gamma, label="Gamma")
 
 # === Step 4: Define Test + Plot Function ===
 def test_and_plot_symbolic(test_file, model_sym_theta, model_sym_gamma):
@@ -165,16 +167,16 @@ def test_and_plot_symbolic(test_file, model_sym_theta, model_sym_gamma):
     plt.ylabel("Theta (rad)")
     plt.legend()
 
-    # plt.subplot(3, 1, 2)
-    # plt.plot(Time, Gamma, label='Gamma Actual', color='blue')
-    # plt.plot(Time, gamma_pred, label='Gamma Predicted', linestyle='--', color='red')
-    # plt.title(f'Gamma Comparison - {base_name}')
-    # plt.ylabel("Gamma (rad)")
-    # plt.legend()
+    plt.subplot(3, 1, 2)
+    plt.plot(Time, Gamma, label='Gamma Actual', color='blue')
+    plt.plot(Time, gamma_pred, label='Gamma Predicted', linestyle='--', color='red')
+    plt.title(f'Gamma Comparison - {base_name}')
+    plt.ylabel("Gamma (rad)")
+    plt.legend()
 
     plt.subplot(3, 1, 3)
     plt.plot(Time, error_theta, label='Theta Error', color='purple')
-    # plt.plot(Time, error_gamma, label='Gamma Error', color='orange')
+    plt.plot(Time, error_gamma, label='Gamma Error', color='orange')
     plt.title(f'Prediction Error - {base_name}')
     plt.xlabel("Time (s)")
     plt.ylabel("Error (rad)")

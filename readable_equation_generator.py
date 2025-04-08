@@ -23,7 +23,7 @@ def pretty_print_equation(equation, feature_names):
     return equation
 
 # === Step 3: Load hall_of_fame.csv ===
-hall_of_fame_path = "outputs/20250401_112648_v9XJrt/hall_of_fame.csv"  # Adjust path if needed
+hall_of_fame_path = "outputs/20250402_110519_8MxAEc/hall_of_fame.csv"  # Adjust path if needed
 df_eqs = pd.read_csv(hall_of_fame_path)
 
 # Print column names to debug (optional)
