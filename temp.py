@@ -8,7 +8,7 @@ from matplotlib.lines import Line2D
 
 # === Parameters ===
 DATA_DIR = "Data"
-FILENAME = "L_dynamique1x100dis2_0014_corrected_velocity.csv"
+FILENAME = "L_dynamique6y100dis1_0020.csv"
 FILEPATH = os.path.join(DATA_DIR, FILENAME)
 SAMPLE_CABLES = 16
 TIME_STEPS_PLOT = [0, 25, 50, 75, 100, 125, 150, 175]
@@ -177,7 +177,7 @@ def animate_velocity(points, v_orig, v_cor, filename="velocity_animation.gif", f
 
         # === Save as PNG if this frame is selected ===
         if t in save_frames:
-            save_path = os.path.join("Results/velocity_frames", f"frame_{t:04d}.png")
+            save_path = os.path.join("Results", "velocity_frames", f"frame_{t:04d}.png")
             plt.savefig(save_path, dpi=300)
             print(f"Saved frame: {save_path}")
 
@@ -190,50 +190,6 @@ def animate_velocity(points, v_orig, v_cor, filename="velocity_animation.gif", f
     print(f"Animation saved as: {filename}")
     plt.close(fig)
 
-def compute_alignment_scores(points, velocities):
-    """Compute cosine similarity between cable vector and velocity."""
-    scores = []
-    for P, v in zip(points, velocities):
-        if not (np.isfinite(P).all() and np.isfinite(v).all()):
-            scores.append(np.nan)
-            continue
-        cable_vec = P[-1] - P[0]
-        score = np.dot(cable_vec, v) / (np.linalg.norm(cable_vec) * np.linalg.norm(v)) if np.linalg.norm(cable_vec) and np.linalg.norm(v) else np.nan
-        scores.append(score)
-    return scores
-
-
-def plot_alignment_over_time(df, col1, col2=None):
-    """Plot alignment score(s) over time."""
-    plt.figure(figsize=(12, 5))
-    plt.plot(df[col1], label="Corrected", color='green', linewidth=2)
-    if col2:
-        plt.plot(df[col2], label="Original", color='red', alpha=0.5)
-    plt.axhline(1.0, linestyle='--', color='gray')
-    plt.axhline(-1.0, linestyle='--', color='gray')
-    plt.title("Velocity Alignment with Cable Axis")
-    plt.xlabel("Time Step")
-    plt.ylabel("Cosine Similarity")
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
-
-
-def plot_histogram(df, col1, col2):
-    """Histogram of alignment distributions."""
-    plt.figure(figsize=(10, 4))
-    plt.hist(df[col1], bins=50, alpha=0.5, label="World Frame", color='red')
-    plt.hist(df[col2], bins=50, alpha=0.5, label="Catenary Frame", color='green')
-    plt.title("Alignment Score Distribution")
-    plt.xlabel("Cosine Similarity")
-    plt.ylabel("Frequency")
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
-
-
 # === Main Execution ===
 df = load_and_clean_data(FILEPATH)
 df = convert_columns_to_numeric(df)
@@ -242,57 +198,82 @@ orig_pts, corr_pts, used_indices = extract_cable_data(df)
 rob_speed = df[["rob_speed X", "rob_speed Y", "rob_speed Z"]].values
 rob_cor_speed = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values
 
-# plot_3d_snapshot(corr_pts[T_VIEW], rob_speed[T_VIEW], rob_cor_speed[T_VIEW], T_VIEW)
-# plot_multiple_snapshots(corr_pts, rob_speed, rob_cor_speed, TIME_STEPS_PLOT)
+plot_3d_snapshot(corr_pts[T_VIEW], rob_speed[T_VIEW], rob_cor_speed[T_VIEW], T_VIEW)
+plot_multiple_snapshots(corr_pts, rob_speed, rob_cor_speed, TIME_STEPS_PLOT)
 
 os.makedirs("velocity_frames", exist_ok=True) 
 save_frames = [0, 250, 300, 350, 400]  
 animate_velocity(corr_pts, rob_speed, rob_cor_speed)
 
+# === Extract Data ===
+time = df["Time"].values
+vx = df["rob_speed X"].values
+vy = df["rob_speed Y"].values
+vz = df["rob_speed Z"].values
 
-# df["alignment_corr"] = compute_alignment_scores(corr_pts, rob_cor_speed)
-# df["alignment_orig"] = compute_alignment_scores(corr_pts, rob_speed)
+vx_cor = df["rob_cor_speed X"].values
+vy_cor = df["rob_cor_speed Y"].values
+vz_cor = df["rob_cor_speed Z"].values
 
-# plot_alignment_over_time(df, "alignment_corr", "alignment_orig")
-# plot_histogram(df, "alignment_orig", "alignment_corr")
+# === Plotting ===
+plt.figure(figsize=(12,6))
+plt.subplot(2, 1, 1)
+plt.plot(time, vx, label='X Velocity', color='red')
+plt.plot(time, vy, label='Y Velocity', color='green')
+plt.plot(time, vz, label='Z Velocity', color='blue')
+plt.title(f"Velocity Components on World Frame Over Time for {FILENAME}")
+plt.xlabel("Time (s)")
+plt.ylabel("Velocity (m/s)")
+plt.legend()
+plt.grid()
 
-# print("Original Alignment Mean ± Std:", np.nanmean(df["alignment_orig"]), "±", np.nanstd(df["alignment_orig"]))
-# print("Corrected Alignment Mean ± Std:", np.nanmean(df["alignment_corr"]), "±", np.nanstd(df["alignment_corr"]))
+plt.subplot(2, 1, 2)
+plt.plot(time, vx_cor, label='X Velocity', color='red')
+plt.plot(time, vy_cor, label='Y Velocity', color='green')
+plt.plot(time, vz_cor, label='Z Velocity', color='blue')
+plt.title(f"Velocity Components on Catenary Frame Over Time for {FILENAME}")
+plt.xlabel("Time (s)")
+plt.ylabel("Velocity (m/s)")
+plt.legend()
 
-
-# # === Extract Data ===
-# time = df["Time"].values
-# vx = df["rob_speed X"].values
-# vy = df["rob_speed Y"].values
-# vz = df["rob_speed Z"].values
-
-# vx_cor = df["rob_cor_speed X"].values
-# vy_cor = df["rob_cor_speed Y"].values
-# vz_cor = df["rob_cor_speed Z"].values
-
-# # === Plotting ===
-# plt.figure(figsize=(12,6))
-# plt.subplot(2, 1, 1)
-# plt.plot(time, vx, label='X Velocity', color='red')
-# plt.plot(time, vy, label='Y Velocity', color='green')
-# plt.plot(time, vz, label='Z Velocity', color='blue')
-# plt.title(f"Velocity Components on World Frame Over Time for {FILENAME}")
-# plt.xlabel("Time (s)")
-# plt.ylabel("Velocity (m/s)")
-# plt.legend()
-# plt.grid()
-
-# plt.subplot(2, 1, 2)
-# plt.plot(time, vx_cor, label='X Velocity', color='red')
-# plt.plot(time, vy_cor, label='Y Velocity', color='green')
-# plt.plot(time, vz_cor, label='Z Velocity', color='blue')
-# plt.title(f"Velocity Components on Catenary Frame Over Time for {FILENAME}")
-# plt.xlabel("Time (s)")
-# plt.ylabel("Velocity (m/s)")
-# plt.legend()
-
-# plt.grid()
-# plt.tight_layout()
-# plt.show()
+plt.grid()
+plt.tight_layout()
+plt.savefig(os.path.join("Results", "Experiment Transformed", f"velocity_components for file {FILENAME}.png"), dpi=300)
 
 
+# 1. Magnitude difference
+mag_raw = np.linalg.norm(rob_speed, axis=1)
+mag_cor = np.linalg.norm(rob_cor_speed, axis=1)
+mag_diff = np.abs(mag_raw - mag_cor)
+
+plt.figure()
+plt.plot(mag_raw, label="Original |v|")
+plt.plot(mag_cor, label="Corrected |v|")
+plt.title("Velocity Magnitude Before and After Rotation")
+plt.xlabel("Time step")
+plt.ylabel("Speed (m/s)")
+plt.legend()
+plt.grid()
+plt.savefig(os.path.join("Results", "Experiment Transformed", f"velocity_magnitude for file {FILENAME}.png"), dpi=300)
+
+# 2. Angle between original and corrected (in degrees)
+dot_prod = np.einsum('ij,ij->i', rob_speed, rob_cor_speed)
+angle_rad = np.arccos(dot_prod / (mag_raw * mag_cor + 1e-8))  # small epsilon to avoid div-by-zero
+angle_deg = np.degrees(angle_rad)
+
+plt.figure()
+plt.plot(angle_deg)
+plt.title("Angle Between Raw and Corrected Velocity Vectors")
+plt.xlabel("Time step")
+plt.ylabel("Angle (degrees)")
+plt.grid()
+plt.savefig(os.path.join("Results", "Experiment Transformed", f"velocity_angle for file {FILENAME}.png"), dpi=300)
+
+# 3. Optional: Compare components
+plt.figure()
+plt.plot(rob_speed[:, 0], label="Raw Vx")
+plt.plot(rob_cor_speed[:, 0], label="Corrected Vx")
+plt.title("X Component of Velocity")
+plt.legend()
+plt.grid()
+plt.savefig(os.path.join("Results", "Experiment Transformed", f"velocity_x_component for file {FILENAME}.png"), dpi=300)
