@@ -9,6 +9,9 @@ from sklearn.metrics import r2_score
 from pysr import PySRRegressor
 import wandb
 
+
+os.environ["JULIA_DEBUG"] = "all"
+
 # === Wandb Initialization ===
 # Initialize wandb
 wandb.init(
@@ -61,14 +64,15 @@ common_params = dict(
     binary_operators=["+", "-", "*", "/"],
     unary_operators=["sin", "cos", "exp", "log"],
     model_selection="best",
-    elementwise_loss="loss(x, y) = (x - y)^2",
-    verbosity=1,
+    loss="loss(x, y) = (x - y)^2",  # Replace old 'elementwise_loss'
+    verbosity=2,
     random_state=42,
     deterministic=True,
-    parallelism='serial',
+    procs=0,
     batching=True,
     batch_size=5000,
 )
+
 
 model_sym_theta = PySRRegressor(**common_params)
 model_sym_gamma = PySRRegressor(**common_params)
