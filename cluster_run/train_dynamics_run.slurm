@@ -5,8 +5,8 @@
 #SBATCH --mem=64G
 #SBATCH --cpus-per-task=10
 #SBATCH --time=1-00:00:00
-#SBATCH -o /home/mundus/mdeowan698/Catenary_Dynamic/Results/logs/symbreg_pysr_out.log
-#SBATCH -e /home/mundus/mdeowan698/Catenary_Dynamic/Results/logs/symbreg_pysr_err.log
+#SBATCH -o /home/mundus/mdeowan698/Catenary_Dynamic/Results/logs/train_dynamic_out.log
+#SBATCH -e /home/mundus/mdeowan698/Catenary_Dynamic/Results/logs/train_dynamic_err.log
 
 # === Setup ===
 cd /home/mundus/mdeowan698/Catenary_Dynamic/cluster_run
@@ -15,4 +15,4 @@ conda activate cad
 
 # WANDB_MODE=disabled
 # === Run ===
-CUDA_LAUNCH_BLOCKING=1 python symbolic_regression_wandb.py
+CUDA_LAUNCH_BLOCKING=1 python train_dynamics.py

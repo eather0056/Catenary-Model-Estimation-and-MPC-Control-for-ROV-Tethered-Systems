@@ -15,4 +15,4 @@ conda activate cad
 
 # WANDB_MODE=disabled
 # === Run ===
-CUDA_LAUNCH_BLOCKING=1 python symbolic_regression_wandb.py
+CUDA_LAUNCH_BLOCKING=1 python main_train.py
