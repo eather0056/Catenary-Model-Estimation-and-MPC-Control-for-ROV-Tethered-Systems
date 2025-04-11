@@ -175,3 +175,5 @@ media/videos/Animation/480p15/partial_movie_files
 
 # Data files
 data/
+cluster_run/wandb
+cluster_run/output
