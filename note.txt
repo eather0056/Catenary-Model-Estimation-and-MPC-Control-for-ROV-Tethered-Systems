@@ -1,0 +1,52 @@
+Git setup
+git config --global user.name "eather0056" 
+git config --global user.email "mdeather0056@gmail.com.com"
+
+git remote set-url origin git@github.com:eather0056/Catenary-Model-Estimation-and-MPC-Control-for-ROV-Tethered-Systems.git
+
+git remote -v
+
+cat ~/.ssh/id_rsa.pub
+
+
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_rsa
+
+
+ssh -T git@github.com
+
+git push origin main
+
+
+Running on Cluster GPU
+Before running your code on the Cluster GPU, please ensure that a GPU is available and allocate the necessary resources.
+
+Check GPU Availability
+To check the availability of GPUs on the cluster, run:
+
+info-cluster
+Select GPU and Allocate Time
+Once you've verified GPU availability, select a specific GPU and allocate the desired runtime using the following command:
+
+srun --time=02:00:00 --gres=gpu:1 --partition=mundus --mem=64G --pty bash -l
+Replace --gres=gpu:1 with the number of GPUs you need, --partition=mundus with the appropriate partition, and adjust --time and --mem as needed.
+
+GPU Status
+To check the status of the GPU, use the following command:
+
+nvidia-smi
+Additional Commands
+Check GPU status for a specific GPU type:
+
+srun --time=02:00:00 --gres=gpu:2080:1 --partition=all --mem=64G --pty bash -l
+View queued jobs for a specific user:
+
+squeue --user  mdeowan698
+Submit a job file using .slurm file:
+
+sbatch <file_name>
+Cancel the job
+
+scancel <job_id>
+Result
+

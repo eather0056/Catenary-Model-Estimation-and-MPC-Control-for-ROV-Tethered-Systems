@@ -1,12 +1,16 @@
-from pysr import PySRRegressor
+import os
+os.environ["JULIA_PYTHONCALL_EXE"] = "/home/mundus/mdeowan698/bin/julia-1.9.4/bin/julia"
 
-X = [[1.0], [2.0], [3.0]]
-y = [1.0, 4.0, 9.0]
+from pysr import PySRRegressor
+import numpy as np
+
+X = np.random.randn(100, 3)
+y = X[:, 0] + X[:, 1]**2 - np.sin(X[:, 2])
 
 model = PySRRegressor(
-    niterations=5,
-    binary_operators=["+", "-", "*", "/"],
+    niterations=10,
+    binary_operators=["+", "-", "*"],
+    unary_operators=["cos", "sin"]
 )
 
 model.fit(X, y)
-print(model)
