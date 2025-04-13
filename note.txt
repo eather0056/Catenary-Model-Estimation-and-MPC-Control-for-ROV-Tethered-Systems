@@ -17,6 +17,7 @@ ssh -T git@github.com
 
 git push origin main
 
+git pull origin main
 
 Running on Cluster GPU
 Before running your code on the Cluster GPU, please ensure that a GPU is available and allocate the necessary resources.

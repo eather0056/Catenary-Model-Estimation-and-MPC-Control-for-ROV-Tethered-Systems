@@ -1,12 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=SymbReg_PySR
-#SBATCH --partition=mundus 
-#SBATCH --gres=gpu:a100-10:1
-#SBATCH --mem=64G
-#SBATCH --cpus-per-task=10
-#SBATCH --time=1-00:00:00
-#SBATCH -o /home/mundus/mdeowan698/Catenary_Dynamic/Results/logs/symbreg_pysr_out.log
-#SBATCH -e /home/mundus/mdeowan698/Catenary_Dynamic/Results/logs/symbreg_pysr_err.log
+#SBATCH --job-name=TrainDynamics_C6_6
+#SBATCH --partition=mundus     # or gpu for guaranteed
+#SBATCH --cpus-per-task=64
+#SBATCH --mem=180G
+#SBATCH --time=4-00:00:00
+#SBATCH -o /home/mundus/mdeowan698/Catenary_Dynamic/Results/logs/TrainDynamics_C6_6_out.log
+#SBATCH -e /home/mundus/mdeowan698/Catenary_Dynamic/Results/logs/TrainDynamics_C6_6_err.log
 
 # === Setup ===
 cd /home/mundus/mdeowan698/Catenary_Dynamic/cluster_run

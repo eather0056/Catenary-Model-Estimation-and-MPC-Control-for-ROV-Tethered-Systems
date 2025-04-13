@@ -1,0 +1,7 @@
+complexity                                                       5
+loss                                                      0.000551
+score                                                     0.000052
+equation                                (1.4295685e-5 * (x1 - x8))
+sympy_format                     1.4295685e-5*x1 - 1.4295685e-5*x8
+lambda_format    PySRFunction(X=>1.4295685e-5*x1 - 1.4295685e-5...
+Name: 2, dtype: object

@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --job-name=SymbReg_PySR
-#SBATCH --partition=mundus 
-#SBATCH --gres=gpu:a100-10:1
-#SBATCH --mem=64G
-#SBATCH --cpus-per-task=10
-#SBATCH --time=1-00:00:00
+#SBATCH --job-name=PySR_Train
+#SBATCH --partition=all  # or gpu for guaranteed
+#SBATCH --nodelist=mundus-mir-2
+#SBATCH --cpus-per-task=64
+#SBATCH --mem=180G
+#SBATCH --time=2-00:00:00
 #SBATCH -o /home/mundus/mdeowan698/Catenary_Dynamic/Results/logs/symbreg_pysr_out.log
 #SBATCH -e /home/mundus/mdeowan698/Catenary_Dynamic/Results/logs/symbreg_pysr_err.log
 
