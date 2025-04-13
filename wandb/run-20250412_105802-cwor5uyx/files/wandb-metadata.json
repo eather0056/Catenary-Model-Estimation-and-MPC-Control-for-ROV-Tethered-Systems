@@ -1,0 +1,31 @@
+{
+  "os": "Windows-10-10.0.26100-SP0",
+  "python": "CPython 3.10.16",
+  "startedAt": "2025-04-12T08:58:02.075904Z",
+  "program": "f:\\Catenary-Model-Estimation-and-MPC-Control-for-ROV-Tethered-Systems\\train_dif.py",
+  "codePath": "train_dif.py",
+  "git": {
+    "remote": "https://github.com/eather0056/Catenary-Model-Estimation-and-MPC-Control-for-ROV-Tethered-Systems.git",
+    "commit": "f3e8754880edfdfba875e724a235502522416643"
+  },
+  "email": "mdeather0056@gmail.com",
+  "root": "F:\\Catenary-Model-Estimation-and-MPC-Control-for-ROV-Tethered-Systems",
+  "host": "LAIT05",
+  "executable": "C:\\Users\\mdeat\\miniconda3\\envs\\cab\\python.exe",
+  "codePathLocal": "train_dif.py",
+  "cpu_count": 4,
+  "cpu_count_logical": 8,
+  "disk": {
+    "/": {
+      "total": "209578881024",
+      "used": "101749469184"
+    }
+  },
+  "memory": {
+    "total": "16981118976"
+  },
+  "cpu": {
+    "count": 4,
+    "countLogical": 8
+  }
+}

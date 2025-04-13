@@ -32,12 +32,12 @@ from pysr import PySRRegressor
 # df_train = df_train.dropna(subset=['Theta', 'Gamma'])
 
 model_sym_theta = PySRRegressor.from_file(
-    run_directory="outputs/20250402_110519_8MxAEc",
+    run_directory="F:\Catenary-Model-Estimation-and-MPC-Control-for-ROV-Tethered-Systems\outputs\differential_training_8fzu4cmg\dgamma_dt\outputs\20250412_130502_JsfsOA",
     model_selection="accuracy", 
 )
 
 model_sym_gamma = PySRRegressor.from_file(
-    run_directory="outputs/20250402_135003_WIAuIp",
+    run_directory="F:\Catenary-Model-Estimation-and-MPC-Control-for-ROV-Tethered-Systems\outputs\differential_training_8fzu4cmg\dtheta_dt\outputs\20250412_125713_HP8NvN",
     model_selection="accuracy"
 )
 
@@ -52,15 +52,36 @@ print(model_sym_gamma.latex())
 
 # === Step 2: Feature Engineering ===
 def extract_features(df):
-    P0 = df[['rod_end X', 'rod_end Y', 'rod_end Z']].values / 1000
-    P1 = df[['robot_cable_attach_point X', 'robot_cable_attach_point Y', 'robot_cable_attach_point Z']].values / 1000
-    V1 = df[['rob_speed X', 'rob_speed Y', 'rob_speed Z']].values
-    rel_vec = P1 - P0
-    cable_len = np.linalg.norm(rel_vec, axis=1).reshape(-1, 1)
-    speed_mag = np.linalg.norm(V1, axis=1).reshape(-1, 1)
-    features = np.hstack([P0, P1, V1, rel_vec, cable_len, speed_mag])
-    return features
+    import numpy as np
 
+    # Position and velocity
+    P0 = df[["rod_end X", "rod_end Y", "rod_end Z"]].values / 1000  # anchor point
+    P1 = df[["robot_cable_attach_point X", "robot_cable_attach_point Y", "robot_cable_attach_point Z"]].values / 1000
+    V1 = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values
+
+    # Time and acceleration
+    time = df["Time"].values
+    acc_x = np.gradient(df["rob_cor_speed X"].values, time)
+    acc_y = np.gradient(df["rob_cor_speed Y"].values, time)
+    acc_z = np.gradient(df["rob_cor_speed Z"].values, time)
+    A1 = np.stack([acc_x, acc_y, acc_z], axis=1)
+
+    # Cable direction unit vector
+    rel_vec = P1 - P0
+    unit_rel = rel_vec / (np.linalg.norm(rel_vec, axis=1, keepdims=True) + 1e-8)
+
+    # Angular states
+    theta = df["Theta"].values.reshape(-1, 1)
+    gamma = df["Gamma"].values.reshape(-1, 1)
+    cos_theta = np.cos(theta)
+    sin_gamma = np.sin(gamma)
+
+    # Angle between V1 and cable direction (cosine similarity)
+    dot_product = np.sum(V1 * unit_rel, axis=1, keepdims=True)
+    norm_v1 = np.linalg.norm(V1, axis=1, keepdims=True) + 1e-8
+    angle_proj = dot_product / norm_v1  # projection-based similarity
+
+    return np.hstack([P1, V1, A1, unit_rel, theta, gamma, cos_theta, sin_gamma, angle_proj])
 
 # X_train = extract_features(df_train)
 # y_theta_train = df_train['Theta'].values

@@ -1,0 +1,7 @@
+complexity                                                      10
+loss                                                      0.001546
+equation              (log(x14) * 38.515667) * (x11 + (x16 + x10))
+score                                                     0.115424
+sympy_format                  38.515667*(x10 + x11 + x16)*log(x14)
+lambda_format    PySRFunction(X=>38.515667*(x10 + x11 + x16)*lo...
+Name: 6, dtype: object
