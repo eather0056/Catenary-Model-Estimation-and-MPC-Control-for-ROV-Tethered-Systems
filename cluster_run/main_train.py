@@ -22,9 +22,8 @@ import re
 from scipy.interpolate import interp1d
 
 
-
 # === Run Name ===
-Run_Name = "TrainDynamics_C6_All_5KIter"
+Run_Name = "TrainDynamics_C6_1_1KIter_NL"
 
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 os.environ["JULIA_DEBUG"] = "all"
@@ -32,17 +31,83 @@ os.environ["JULIA_DEBUG"] = "all"
 PYSR_VERSION = version.parse(pysr.__version__)
 IS_NEW_PYSR = PYSR_VERSION >= version.parse("0.13.0")
 
-unary_ops = ["sin", "cos", "log", "sqrt"]
+# unary_ops = ["sin", "cos", "squre", "tanh"] # ["sin", "cos", "log", "sqrt"]
+# if IS_NEW_PYSR:
+#     unary_ops += ["safe_log", "safe_sqrt"]
+
+
+# wandb.init(
+#     project="Catenary_Dynamics_Differential",
+#     entity="eather0056",
+#     name=f"{Run_Name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+#     tags=["symbolic", "dynamics", "test"],
+#     notes="Tanning for theta/gamma symbolic equations, 0033 cable 6 dataset used with 1K iter 20 feature.",
+#     config={
+#         "model": "PySR",
+#         "task": "Differential Equation Discovery",
+#         "niterations": 1000,
+#         "binary_operators": ["+", "-", "*", "/"],
+#         "unary_operators": unary_ops,
+#         "custom_unary_operators": {
+#             "safe_log(x)": "log(abs(x) + 1e-5)",
+#             "safe_sqrt(x)": "sqrt(abs(x))"
+#         } if IS_NEW_PYSR else None,
+#         "batching": True,
+#         "batch_size": 5000,
+#         "random_state": 42,
+#         "maxsize": 40,
+#         "procs": 0,
+#         "verbosity": 1,
+#         "loss": "loss(x, y) = (x - y)^2 + 0.01 * abs(x)",
+#         "deterministic": True,
+#         "multithreading": False,
+#         # "parallelism": "serial", # For older versions of PySR
+#         "model_selection": "best",
+        
+#     }
+# )
+
+# config = wandb.config
+
+# common_params = dict(
+#     niterations=config["niterations"],
+#     binary_operators=config["binary_operators"],
+#     unary_operators=config["unary_operators"],
+#     model_selection=config["model_selection"],
+#     complexity_of_operators={"/": 5, "sqrt": 3, "log": 3, "sin": 2, "cos": 2},
+#     verbosity=config["verbosity"],
+#     batching=config["batching"],
+#     batch_size=config["batch_size"],
+#     random_state=config["random_state"],
+#     maxsize=config["maxsize"],
+# )
+
+# # Version-specific logic
+# if IS_NEW_PYSR:
+#     common_params["elementwise_loss"] = config["loss"]
+#     common_params["parallelism"] = "serial"
+#     common_params["custom_unary_operators"] = {
+#         "safe_log(x)": "log(abs(x) + 1e-5)",
+#         "safe_sqrt(x)": "sqrt(abs(x))"
+#     }
+# else:
+#     common_params["loss"] = config["loss"]
+#     common_params["deterministic"] = config["deterministic"]
+#     common_params["procs"] = config["procs"]
+#     common_params["multithreading"] = config["multithreading"]
+
+# === Unary Operators (nonlinear included) ===
+unary_ops = ["sin", "cos", "square", "tanh"]
 if IS_NEW_PYSR:
     unary_ops += ["safe_log", "safe_sqrt"]
 
-
+# === Common Config for Both Local and Cluster (with older PySR) ===
 wandb.init(
     project="Catenary_Dynamics_Differential",
     entity="eather0056",
     name=f"{Run_Name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-    tags=["symbolic", "dynamics", "test"],
-    notes="Tanning for theta/gamma symbolic equations, all cable 6 dataset used with 5K iter.",
+    tags=["symbolic", "dynamics", "nonlinear"],
+    notes="Tanning for theta/gamma symbolic equations, 0033 cable 6 dataset used with 1K iter 20 feature adding more nonlinearity.",
     config={
         "model": "PySR",
         "task": "Differential Equation Discovery",
@@ -56,61 +121,73 @@ wandb.init(
         "batching": True,
         "batch_size": 5000,
         "random_state": 42,
-        "maxsize": 30,
+        "maxsize": 40,
         "procs": 0,
         "verbosity": 1,
         "loss": "loss(x, y) = (x - y)^2 + 0.01 * abs(x)",
         "deterministic": True,
         "multithreading": False,
-        # "parallelism": "serial", # For older versions of PySR
         "model_selection": "best",
-        
     }
 )
 
 config = wandb.config
 
+# === PySR Regressor Parameters ===
 common_params = dict(
     niterations=config["niterations"],
     binary_operators=config["binary_operators"],
     unary_operators=config["unary_operators"],
     model_selection=config["model_selection"],
-    # elementwise_loss=config["loss"],
-    loss=config["loss"],
-    # parallelism=config["parallelism"],
-    complexity_of_operators={"/": 5, "sqrt": 3, "log": 3, "sin": 2, "cos": 2},
+    complexity_of_operators={
+        "/": 5,
+        "sqrt": 3, "safe_sqrt": 3,
+        "log": 3, "safe_log": 3,
+        "sin": 2, "cos": 2,
+        "square": 2, "tanh": 3
+    },
     verbosity=config["verbosity"],
     batching=config["batching"],
     batch_size=config["batch_size"],
     random_state=config["random_state"],
-    deterministic=config["deterministic"],
-    procs=config["procs"],
     maxsize=config["maxsize"],
-    multithreading=config["multithreading"],
 )
+
+if IS_NEW_PYSR:
+    common_params["elementwise_loss"] = config["loss"]
+    common_params["parallelism"] = "serial"
+    common_params["custom_unary_operators"] = config["custom_unary_operators"]
+else:
+    common_params["loss"] = config["loss"]
+    common_params["deterministic"] = config["deterministic"]
+    common_params["procs"] = config["procs"]
+    common_params["multithreading"] = config["multithreading"]
 
 output_dir = f"outputs/{Run_Name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 os.makedirs(output_dir, exist_ok=True)
 
 # === Load & Preprocess ===
 # Set uniform time step
-UNIFORM_DT = 0.05  # seconds
-
+UNIFORM_DT = 0.05
 def uniform_resample(df, dt=UNIFORM_DT):
-    """Resample each CSV to uniform time interval using interpolation."""
+    """Resample DataFrame to a uniform time step using vectorized interpolation."""
     if "Time" not in df.columns:
         raise ValueError("Missing 'Time' column in dataset.")
     
     time_orig = df["Time"].values
     time_uniform = np.arange(time_orig[0], time_orig[-1], dt)
-    df_resampled = pd.DataFrame({"Time": time_uniform})
 
+    # Build new columns with interpolation
+    data_dict = {"Time": time_uniform}
     for col in df.columns:
         if col != "Time":
             f = interp1d(time_orig, df[col].values, kind='linear', bounds_error=False, fill_value="extrapolate")
-            df_resampled[col] = f(time_uniform)
+            data_dict[col] = f(time_uniform)
 
+    # Create resampled DataFrame at once (avoids fragmentation)
+    df_resampled = pd.DataFrame(data_dict)
     return df_resampled
+
 
 def load_and_resample_all(file_list, dt=UNIFORM_DT):
     """Load multiple CSVs and resample them independently before merging."""
@@ -179,10 +256,6 @@ def extract_features(df):
     rel_vec = P1 - P0
     unit_rel = rel_vec / (np.linalg.norm(rel_vec, axis=1, keepdims=True) + 1e-8)
 
-    # x14 = clipped cable feature, log-safe
-    x14 = np.linalg.norm(P1 - P0, axis=1, keepdims=True)
-    x14 = np.clip(x14, 1e-5, None)  # Prevent log(0)
-
     # Angular states
     theta = df["Theta"].values.reshape(-1, 1)
     gamma = df["Gamma"].values.reshape(-1, 1)
@@ -194,7 +267,14 @@ def extract_features(df):
     norm_v1 = np.linalg.norm(V1, axis=1, keepdims=True) + 1e-8
     angle_proj = dot_product / norm_v1  # projection-based similarity
 
-    return np.hstack([P1, V1, A1, unit_rel, theta, gamma, cos_theta, sin_gamma, angle_proj, x14])
+    # Cable norm (used in log/sqrt)
+    x14 = np.linalg.norm(P1 - P0, axis=1, keepdims=True)
+
+    # Apply safe functions manually
+    x14_log = np.log(np.clip(x14, 1e-5, None))
+    x14_sqrt = np.sqrt(np.abs(x14))
+
+    return np.hstack([P1, V1, A1, unit_rel, theta, gamma, cos_theta, sin_gamma, angle_proj, x14, x14_log, x14_sqrt])
 
 # === Derivative Targets ===
 def compute_derivatives(df):
@@ -302,12 +382,6 @@ model_dtheta_dt.equations_.to_csv(os.path.join(output_dir, f"dtheta_results_{tim
 model_dgamma_dt.equations_.to_csv(os.path.join(output_dir, f"dgamma_results_{timestamp}.csv"), index=False)
 
 
-# === W&B Logs ===
-wandb.log({
-    "eq_dtheta_dt_final": str(model_dtheta_dt.get_best()),
-    "eq_dgamma_dt_final": str(model_dgamma_dt.get_best()),
-})
-
 # === Evaluation ===
 def log_scatter_plot(actual, pred, label):
     fig, ax = plt.subplots()
@@ -341,6 +415,10 @@ errors_theta = model_dtheta_dt.predict(X_test) - y_dtheta_dt_test
 errors_gamma = model_dgamma_dt.predict(X_test) - y_dgamma_dt_test
 
 wandb.log({
+    "Number of Features": X_train.shape[1],
+    "Number of Training Samples": len(X_train),
+    "eq_dtheta_dt_final": str(model_dtheta_dt.get_best()),
+    "eq_dgamma_dt_final": str(model_dgamma_dt.get_best()),
     "r2_score_dtheta_dt": r2_score(y_dtheta_dt_test, model_dtheta_dt.predict(X_test)),
     "r2_score_dgamma_dt": r2_score(y_dgamma_dt_test, model_dgamma_dt.predict(X_test)),
     "dTheta_dt_best_complexity": model_dtheta_dt.get_best()["complexity"],

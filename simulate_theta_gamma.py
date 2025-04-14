@@ -5,7 +5,7 @@ import joblib
 from sklearn.metrics import r2_score
 
 # === Load Test Dataset ===
-df = pd.read_csv("Data\L_dynamique6y200dis2_0027.csv")
+df = pd.read_csv("Data/L_dynamique6x100dis2_0035.csv")
 time = df["Time"].values
 
 # === Extract Features (same function as training) ===
@@ -48,8 +48,8 @@ X_test = extract_features(df)
 # model_dgamma_dt = joblib.load("outputs/gamma/checkpoint.pkl")
 
 # === Load Trained Models ===
-model_dtheta_dt = joblib.load("outputs/20250412_214744_lpGawP/checkpoint.pkl")
-model_dgamma_dt = joblib.load("outputs/20250412_225159_GufPvS/checkpoint.pkl")
+model_dtheta_dt = joblib.load("cluster_run/outputs/TrainDynamics_C6_6_20250413_201928/dtheta_dt/hall_of_fame_2025-04-13_201934.791.pkl")
+model_dgamma_dt = joblib.load("cluster_run/outputs/TrainDynamics_C6_6_20250413_201928/dgamma_dt/hall_of_fame_2025-04-13_220211.850.pkl")
 
 # === Print Equations ===
 print("Best Equation for dTheta/dt:")

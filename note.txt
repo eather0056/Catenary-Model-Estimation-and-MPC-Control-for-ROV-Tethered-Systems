@@ -4,20 +4,21 @@ git config --global user.email "mdeather0056@gmail.com.com"
 
 git remote set-url origin git@github.com:eather0056/Catenary-Model-Estimation-and-MPC-Control-for-ROV-Tethered-Systems.git
 
-git remote -v
+
 
 cat ~/.ssh/id_rsa.pub
 
-
+git remote -v
 eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/id_rsa
 
+git pull origin main
 
 ssh -T git@github.com
 
 git push origin main
 
-git pull origin main
+
 
 Running on Cluster GPU
 Before running your code on the Cluster GPU, please ensure that a GPU is available and allocate the necessary resources.
