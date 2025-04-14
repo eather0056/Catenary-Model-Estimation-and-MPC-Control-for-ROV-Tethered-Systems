@@ -19,6 +19,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score
 from collections import Counter
 import re
+from scipy.interpolate import interp1d
+
 
 
 # === Run Name ===
@@ -91,10 +93,37 @@ output_dir = f"outputs/{Run_Name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 os.makedirs(output_dir, exist_ok=True)
 
 # === Load & Preprocess ===
-def load_and_concat(files):
-    dfs = [pd.read_csv(f) for f in files]
-    df = pd.concat(dfs, ignore_index=True)
-    return df.dropna(subset=["Theta", "Gamma", "Time"])
+# Set uniform time step
+UNIFORM_DT = 0.05  # seconds
+
+def uniform_resample(df, dt=UNIFORM_DT):
+    """Resample each CSV to uniform time interval using interpolation."""
+    if "Time" not in df.columns:
+        raise ValueError("Missing 'Time' column in dataset.")
+    
+    time_orig = df["Time"].values
+    time_uniform = np.arange(time_orig[0], time_orig[-1], dt)
+    df_resampled = pd.DataFrame({"Time": time_uniform})
+
+    for col in df.columns:
+        if col != "Time":
+            f = interp1d(time_orig, df[col].values, kind='linear', bounds_error=False, fill_value="extrapolate")
+            df_resampled[col] = f(time_uniform)
+
+    return df_resampled
+
+def load_and_resample_all(file_list, dt=UNIFORM_DT):
+    """Load multiple CSVs and resample them independently before merging."""
+    dfs = []
+    for f in file_list:
+        df = pd.read_csv(f)
+        if {"Theta", "Gamma", "Time"}.issubset(df.columns):
+            df_clean = df.dropna(subset=["Theta", "Gamma", "Time"])
+            df_resampled = uniform_resample(df_clean, dt)
+            dfs.append(df_resampled)
+        else:
+            print(f"[WARNING] Missing columns in {f}, skipping.")
+    return pd.concat(dfs, ignore_index=True)
 
 # all_files = sorted(glob.glob("/home/mundus/mdeowan698/Catenary_Dynamic/Data/*.csv"))
 # train_files, test_files = train_test_split(all_files, test_size=0.9, random_state=42)
@@ -103,30 +132,30 @@ def load_and_concat(files):
 # === Load and Combine Training Datasets ===
 train_files = [
     "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6x100dis2_0033.csv",  
-    "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6x100dis2_0034.csv",  
-    "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6x100dis2_0035.csv",  
-    "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6x200dis2_0030.csv",  
-    "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6x200dis2_0031.csv",  
-    "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6x200dis2_0032.csv",  
-    "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y100dis1_0018.csv",  
-    "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y100dis1_0019.csv",  
-    "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y100dis1_0020.csv",  
-    "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y100dis2_0021.csv",  
-    "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y100dis2_0022.csv",  
-    "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y100dis2_0023.csv",  
-    "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y200dis1_0025.csv",  
-    "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y200dis1_0026.csv",  
-    "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y200dis2_0027.csv",  
-    "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y200dis2_0028.csv",  
-    "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y200dis2_0029.csv"  
+    # "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6x100dis2_0034.csv",  
+    # "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6x100dis2_0035.csv",  
+    # "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6x200dis2_0030.csv",  
+    # "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6x200dis2_0031.csv",  
+    # "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6x200dis2_0032.csv",  
+    # "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y100dis1_0018.csv",  
+    # "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y100dis1_0019.csv",  
+    # "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y100dis1_0020.csv",  
+    # "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y100dis2_0021.csv",  
+    # "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y100dis2_0022.csv",  
+    # "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y100dis2_0023.csv",  
+    # "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y200dis1_0025.csv",  
+    # "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y200dis1_0026.csv",  
+    # "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y200dis2_0027.csv",  
+    # "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y200dis2_0028.csv",  
+    # "/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y200dis2_0029.csv"  
 ]
 
 # === Test on New Dataset ===
 test_files = ["/home/mundus/mdeowan698/Catenary_Dynamic/Data/L_dynamique6y200dis1_0024.csv"]
 
 
-df_train = load_and_concat(train_files)
-df_test = load_and_concat(test_files)
+df_train = load_and_resample_all(train_files)
+df_test = load_and_resample_all(test_files)
 
 # === Features & Derivatives ===
 def extract_features(df):
