@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from pympc.models.catenary import Catenary
 import matplotlib.animation as animation
-from catenary_transform import transform_catenary
+from main_fun import transform_catenary
 
 
 # === CONSTANTS ===

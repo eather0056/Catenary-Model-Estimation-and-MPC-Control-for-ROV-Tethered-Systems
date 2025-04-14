@@ -2,7 +2,7 @@ from pympc.models.catenary import Catenary
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from catenary_transform import transform_catenary
+from main_fun import transform_catenary
 
 # Create a Catenary object
 catenary = Catenary(length=3., reference_frame='ENU')

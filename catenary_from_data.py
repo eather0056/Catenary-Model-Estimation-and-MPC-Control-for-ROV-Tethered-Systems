@@ -7,7 +7,7 @@ from pympc.models.catenary import Catenary
 import time
 import imageio
 import os
-from catenary_transform import transform_catenary
+from main_fun import transform_catenary
 
 # Load CSV file
 datasetname = "data.csv"
