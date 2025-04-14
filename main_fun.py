@@ -111,18 +111,20 @@ def transform_catenary(
 # Function to extract features from the dataset for training and testing -- main
 # ==========================================================================================================
 def extract_features(df):
-    import numpy as np
-
     # Position and velocity
     P0 = df[["rod_end X", "rod_end Y", "rod_end Z"]].values / 1000  # anchor point
     P1 = df[["robot_cable_attach_point X", "robot_cable_attach_point Y", "robot_cable_attach_point Z"]].values / 1000
     V1 = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values
 
     # Time and acceleration
-    time = df["Time"].values
-    acc_x = np.gradient(df["rob_cor_speed X"].values, time)
-    acc_y = np.gradient(df["rob_cor_speed Y"].values, time)
-    acc_z = np.gradient(df["rob_cor_speed Z"].values, time)
+    time_array = df["Time"].values
+    # acc_x = np.gradient(df["rob_cor_speed X"].values, time)
+    # acc_y = np.gradient(df["rob_cor_speed Y"].values, time)
+    # acc_z = np.gradient(df["rob_cor_speed Z"].values, time)
+
+    acc_x = np.gradient(df["rob_cor_speed X"].values, time_array)
+    acc_y = np.gradient(df["rob_cor_speed Y"].values, time_array)
+    acc_z = np.gradient(df["rob_cor_speed Z"].values, time_array)
     A1 = np.stack([acc_x, acc_y, acc_z], axis=1)
 
     # Cable direction unit vector
@@ -140,7 +142,14 @@ def extract_features(df):
     norm_v1 = np.linalg.norm(V1, axis=1, keepdims=True) + 1e-8
     angle_proj = dot_product / norm_v1  # projection-based similarity
 
-    return np.hstack([P1, V1, A1, unit_rel, theta, gamma, cos_theta, sin_gamma, angle_proj])
+    # # Cable norm (used in log/sqrt)
+    x14 = np.linalg.norm(P1 - P0, axis=1, keepdims=True)
+
+    # # Apply safe functions manually
+    # x14_log = np.log(np.clip(x14, 1e-5, None))
+    # x14_sqrt = np.sqrt(np.abs(x14))
+
+    return np.hstack([P1, V1, A1, unit_rel, theta, gamma, cos_theta, sin_gamma, angle_proj, x14])
 
 # ==================================================================================================
 # === Function for plot of model validation Simulated function to demonstrate integration-based evaluation ===
@@ -212,7 +221,7 @@ def plot_integration(time_array, theta_true, theta_pred, gamma_true, gamma_pred)
     axs[1].grid()
 
     axs[2].plot(time_array, theta_error, label="Theta Error", color="purple")
-    axs[2].plot(time_array, gamma_error, label="Gamma Error", color="orange")
+    # axs[2].plot(time_array, gamma_error, label="Gamma Error", color="orange")
     axs[2].set_ylabel("Error (rad)")
     axs[2].set_xlabel("Time (s)")
     axs[2].legend()

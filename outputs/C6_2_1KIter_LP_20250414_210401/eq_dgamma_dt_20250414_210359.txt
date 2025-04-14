@@ -1,0 +1,7 @@
+complexity                                                       9
+loss                                                      0.000924
+equation             -0.029789533 * ((x13 + 0.600765) * (x3 - x1))
+score                                                     0.143439
+sympy_format              -0.029789533*(-x1 + x3)*(x13 + 0.600765)
+lambda_format    PySRFunction(X=>-0.029789533*(-x1 + x3)*(x13 +...
+Name: 4, dtype: object
