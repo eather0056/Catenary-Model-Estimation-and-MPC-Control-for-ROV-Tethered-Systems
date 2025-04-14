@@ -1,0 +1,7 @@
+complexity                                     3
+loss                                    0.004469
+score                                   0.054601
+equation                      (0.02270796 * x16)
+sympy_format                      0.02270796*x16
+lambda_format    PySRFunction(X=>0.02270796*x16)
+Name: 1, dtype: object

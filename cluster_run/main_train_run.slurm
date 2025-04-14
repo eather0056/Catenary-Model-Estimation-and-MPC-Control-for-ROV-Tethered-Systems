@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=TrainDynamics_C6_6
+#SBATCH --job-name=C6_All_5KIter
 #SBATCH --partition=mundus     # or gpu for guaranteed
 #SBATCH --cpus-per-task=64
 #SBATCH --mem=180G
 #SBATCH --time=4-00:00:00
-#SBATCH -o /home/mundus/mdeowan698/Catenary_Dynamic/Results/logs/TrainDynamics_C6_6_out.log
-#SBATCH -e /home/mundus/mdeowan698/Catenary_Dynamic/Results/logs/TrainDynamics_C6_6_err.log
+#SBATCH -o /home/mundus/mdeowan698/Catenary_Dynamic/Results/logs/TrainDynamics_C6_All_5KIter_out.log
+#SBATCH -e /home/mundus/mdeowan698/Catenary_Dynamic/Results/logs/TrainDynamics_C6_All_5KIter_err.log
 
 # === Setup ===
 cd /home/mundus/mdeowan698/Catenary_Dynamic/cluster_run
