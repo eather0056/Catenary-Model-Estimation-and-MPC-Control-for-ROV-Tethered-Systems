@@ -5,6 +5,8 @@ from scipy.ndimage import gaussian_filter1d
 from sklearn.metrics import r2_score
 import numpy as np
 from typing import Callable, Tuple
+from scipy.interpolate import interp1d
+
 
 
 
@@ -110,46 +112,165 @@ def transform_catenary(
 # === Extract Features from dataset, functions for PySR ===
 # Function to extract features from the dataset for training and testing -- main
 # ==========================================================================================================
+# === Load & Preprocess for Training===
+# Set uniform time step
+import wandb
+import threading
+import time
+import os
+import io
+from PIL import Image
+
+UNIFORM_DT = 0.05
+def uniform_resample(df, dt=UNIFORM_DT):
+    """Resample DataFrame to a uniform time step using vectorized interpolation."""
+    if "Time" not in df.columns:
+        raise ValueError("Missing 'Time' column in dataset.")
+    
+    time_orig = df["Time"].values
+    time_uniform = np.arange(time_orig[0], time_orig[-1], dt)
+
+    # Build new columns with interpolation
+    data_dict = {"Time": time_uniform}
+    for col in df.columns:
+        if col != "Time":
+            f = interp1d(time_orig, df[col].values, kind='linear', bounds_error=False, fill_value="extrapolate")
+            data_dict[col] = f(time_uniform)
+
+    # Create resampled DataFrame at once (avoids fragmentation)
+    df_resampled = pd.DataFrame(data_dict)
+    return df_resampled
+
+
+def load_and_resample_all(file_list, dt=UNIFORM_DT):
+    """Load multiple CSVs and resample them independently before merging."""
+    dfs = []
+    for f in file_list:
+        df = pd.read_csv(f)
+        if {"Theta", "Gamma", "Time"}.issubset(df.columns):
+            df_clean = df.dropna(subset=["Theta", "Gamma", "Time"])
+            df_resampled = uniform_resample(df_clean, dt)
+            dfs.append(df_resampled)
+        else:
+            print(f"[WARNING] Missing columns in {f}, skipping.")
+    return pd.concat(dfs, ignore_index=True)
+
+# === Load All Datasets ===
+def load_and_concat(files):
+    dfs = [pd.read_csv(f) for f in files]
+    df = pd.concat(dfs, ignore_index=True)
+    return df.dropna(subset=['Theta', 'Gamma'])
+
 def extract_features(df):
-    # Position and velocity
-    P0 = df[["rod_end X", "rod_end Y", "rod_end Z"]].values / 1000  # anchor point
+    P0 = df[["rod_end X", "rod_end Y", "rod_end Z"]].values / 1000
     P1 = df[["robot_cable_attach_point X", "robot_cable_attach_point Y", "robot_cable_attach_point Z"]].values / 1000
     V1 = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values
+    time = df["Time"].values
 
-    # Time and acceleration
-    time_array = df["Time"].values
-    # acc_x = np.gradient(df["rob_cor_speed X"].values, time)
-    # acc_y = np.gradient(df["rob_cor_speed Y"].values, time)
-    # acc_z = np.gradient(df["rob_cor_speed Z"].values, time)
-
-    acc_x = np.gradient(df["rob_cor_speed X"].values, time_array)
-    acc_y = np.gradient(df["rob_cor_speed Y"].values, time_array)
-    acc_z = np.gradient(df["rob_cor_speed Z"].values, time_array)
+    acc_x = np.gradient(df["rob_cor_speed X"].values, time)
+    acc_y = np.gradient(df["rob_cor_speed Y"].values, time)
+    acc_z = np.gradient(df["rob_cor_speed Z"].values, time)
     A1 = np.stack([acc_x, acc_y, acc_z], axis=1)
 
-    # Cable direction unit vector
     rel_vec = P1 - P0
     unit_rel = rel_vec / (np.linalg.norm(rel_vec, axis=1, keepdims=True) + 1e-8)
+    tension = np.clip(np.linalg.norm(rel_vec, axis=1, keepdims=True), 1e-5, 10)
 
-    # Angular states
-    theta = df["Theta"].values.reshape(-1, 1)
-    gamma = df["Gamma"].values.reshape(-1, 1)
-    cos_theta = np.cos(theta)
-    sin_gamma = np.sin(gamma)
-
-    # Angle between V1 and cable direction (cosine similarity)
     dot_product = np.sum(V1 * unit_rel, axis=1, keepdims=True)
     norm_v1 = np.linalg.norm(V1, axis=1, keepdims=True) + 1e-8
-    angle_proj = dot_product / norm_v1  # projection-based similarity
+    angle_proj = np.clip(dot_product / norm_v1, -1, 1)
 
-    # # Cable norm (used in log/sqrt)
-    x14 = np.linalg.norm(P1 - P0, axis=1, keepdims=True)
+    theta = df["Theta"].values.reshape(-1, 1)
+    gamma = df["Gamma"].values.reshape(-1, 1)
+    theta_prev = np.roll(theta, 1)
+    gamma_prev = np.roll(gamma, 1)
+    theta_prev[0] = theta[0]
+    gamma_prev[0] = gamma[0]
 
-    # # Apply safe functions manually
-    # x14_log = np.log(np.clip(x14, 1e-5, None))
-    # x14_sqrt = np.sqrt(np.abs(x14))
+    return np.hstack([P1, V1, A1, unit_rel, tension, angle_proj, theta, gamma, theta_prev, gamma_prev])
 
-    return np.hstack([P1, V1, A1, unit_rel, theta, gamma, cos_theta, sin_gamma, angle_proj, x14])
+# === Derivatives ===
+def compute_derivatives(df):
+    time_array = df["Time"].values
+    theta = df["Theta"].values
+    gamma = df["Gamma"].values
+    dtheta = np.gradient(theta, time_array)
+    dgamma = np.gradient(gamma, time_array)
+    return dtheta, dgamma
+
+# === Background Logger for Training Progress ===
+def log_pysr_progress(model, label, total_iters, interval=60):
+    def _loop():
+        while not getattr(model, "_finished", False):
+            try:
+                results = getattr(model, "equations_", None) or getattr(model, "equation_search_results", None)
+                if results is not None and not results.empty:
+                    best = results.loc[results["loss"].idxmin()]
+                    progress = min(len(results) / total_iters * 100, 100)
+                    wandb.log({
+                        f"{label}/progress_percent": progress,
+                        f"{label}/current_best_loss": best["loss"],
+                        f"{label}/current_best_complexity": best["complexity"],
+                        f"{label}/expressions_evaluated": len(results),
+                        f"{label}/hall_of_fame_top": str(best["equation"]),
+                    })
+            except Exception as e:
+                print(f"[Progress Log] {label} failed to log: {e}")
+            time.sleep(interval)
+
+    thread = threading.Thread(target=_loop, daemon=True)
+    thread.start()
+
+# === Evaluation ===
+def log_scatter_plot(actual, pred, label, output_dir):
+    fig, ax = plt.subplots()
+    ax.scatter(actual, pred, alpha=0.4)
+    ax.plot([actual.min(), actual.max()], [actual.min(), actual.max()], 'r--')
+    ax.set_title(f"{label}: Actual vs Predicted")
+    ax.set_xlabel("Actual")
+    ax.set_ylabel("Predicted")
+
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png")
+    buf.seek(0)
+
+    image = Image.open(buf)
+    wandb.log({f"{label}_scatter": wandb.Image(image, caption=label)})
+
+    plt.savefig(os.path.join(output_dir, f"{label}_scatter.png"))
+    plt.close()
+
+# === Convergence Plot ===
+def log_convergence_plot(model, label, output_dir):
+    # Get either equations_ or equation_search_results
+    res = getattr(model, "equations_", None)
+    if res is None or (hasattr(res, "empty") and res.empty):
+        res = getattr(model, "equation_search_results", None)
+
+    if res is None or (hasattr(res, "empty") and res.empty):
+        print(f"[WARN] No convergence results found for {label}")
+        return
+    
+    best = res.loc[res["loss"].idxmin()]
+    plt.figure(figsize=(10, 6))
+    plt.scatter(res["complexity"], res["loss"], alpha=0.4)
+    plt.scatter(best["complexity"], best["loss"], color="red", label="Best")
+    plt.xlabel("Complexity")
+    plt.ylabel("Loss")
+    plt.title(f"{label} Convergence")
+    plt.grid()
+    plt.legend()
+
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png")
+    buf.seek(0)
+
+    # FIX: Convert to PIL image
+    image = Image.open(buf)
+    wandb.log({f"{label}_convergence": wandb.Image(image, caption=f"{label} Convergence")})
+    plt.savefig(os.path.join(output_dir, f"{label}_convergence.png"))
+    plt.close()
+
 
 # ==================================================================================================
 # === Function for plot of model validation Simulated function to demonstrate integration-based evaluation ===

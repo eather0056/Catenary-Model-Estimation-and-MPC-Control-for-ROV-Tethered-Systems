@@ -7,57 +7,44 @@ import pathlib
 from sympy import latex
 
 # === Load Test Dataset ===
-df = pd.read_csv("Data\\L_dynamique6y100dis1_0020.csv")  # Use double backslash for Windows
+df = pd.read_csv("Data\\L_dynamique6x100dis2_0033.csv")  # Use double backslash for Windows
 time = df["Time"].values
 
 # === Extract Features (same function as training) ===
 def extract_features(df):
-    # Position and velocity
-    P0 = df[["rod_end X", "rod_end Y", "rod_end Z"]].values / 1000  # anchor point
+    P0 = df[["rod_end X", "rod_end Y", "rod_end Z"]].values / 1000
     P1 = df[["robot_cable_attach_point X", "robot_cable_attach_point Y", "robot_cable_attach_point Z"]].values / 1000
     V1 = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values
+    time = df["Time"].values
 
-    # Time and acceleration
-    time_array = df["Time"].values
-    # acc_x = np.gradient(df["rob_cor_speed X"].values, time)
-    # acc_y = np.gradient(df["rob_cor_speed Y"].values, time)
-    # acc_z = np.gradient(df["rob_cor_speed Z"].values, time)
-
-    acc_x = np.gradient(df["rob_cor_speed X"].values, time_array)
-    acc_y = np.gradient(df["rob_cor_speed Y"].values, time_array)
-    acc_z = np.gradient(df["rob_cor_speed Z"].values, time_array)
+    acc_x = np.gradient(df["rob_cor_speed X"].values, time)
+    acc_y = np.gradient(df["rob_cor_speed Y"].values, time)
+    acc_z = np.gradient(df["rob_cor_speed Z"].values, time)
     A1 = np.stack([acc_x, acc_y, acc_z], axis=1)
 
-    # Cable direction unit vector
     rel_vec = P1 - P0
     unit_rel = rel_vec / (np.linalg.norm(rel_vec, axis=1, keepdims=True) + 1e-8)
+    tension = np.clip(np.linalg.norm(rel_vec, axis=1, keepdims=True), 1e-5, 10)
 
-    # Angular states
-    theta = df["Theta"].values.reshape(-1, 1)
-    gamma = df["Gamma"].values.reshape(-1, 1)
-    cos_theta = np.cos(theta)
-    sin_gamma = np.sin(gamma)
-
-    # Angle between V1 and cable direction (cosine similarity)
     dot_product = np.sum(V1 * unit_rel, axis=1, keepdims=True)
     norm_v1 = np.linalg.norm(V1, axis=1, keepdims=True) + 1e-8
-    angle_proj = dot_product / norm_v1  # projection-based similarity
+    angle_proj = np.clip(dot_product / norm_v1, -1, 1)
 
-    # Cable norm (used in log/sqrt)
-    x14 = np.linalg.norm(P1 - P0, axis=1, keepdims=True)
+    theta = df["Theta"].values.reshape(-1, 1)
+    gamma = df["Gamma"].values.reshape(-1, 1)
+    theta_prev = np.roll(theta, 1)
+    gamma_prev = np.roll(gamma, 1)
+    theta_prev[0] = theta[0]
+    gamma_prev[0] = gamma[0]
 
-    # Apply safe functions manually
-    x14_log = np.log(np.clip(x14, 1e-5, None))
-    x14_sqrt = np.sqrt(np.abs(x14))
-
-    return np.hstack([P1, V1, A1, unit_rel, angle_proj])
+    return np.hstack([P1, V1, A1, unit_rel, tension, angle_proj, theta, gamma, theta_prev, gamma_prev])
 
 X_test = extract_features(df)
 
 pathlib.PosixPath = pathlib.WindowsPath
 # === Load Trained Models ===
-model_dgamma_dt = joblib.load("outputs/C6_2_1KIter_11f_20250415_003430/model_dgamma_dt_20250415_003428.pkl")
-model_dtheta_dt = joblib.load("outputs/C6_2_1KIter_11f_20250415_003430/model_dtheta_dt_20250415_003428.pkl")
+model_dgamma_dt = joblib.load("outputs/saved_models/model_dgamma_dt.pkl")
+model_dtheta_dt = joblib.load("outputs/saved_models/model_dtheta_dt.pkl")
 
 # # === Print Best Equations and LaTeX ===
 # print("Best Equation for dTheta/dt:")
@@ -76,6 +63,12 @@ sympy_expr = best_eq_dtheta["sympy_format"]
 latex_expr = latex(sympy_expr)
 
 print(f"\nManual LaTeX for dTheta/dt:\n{latex_expr}")
+
+best_eq_dgamma = model_dgamma_dt.get_best()
+sympy_expr = best_eq_dgamma["sympy_format"]
+latex_expr_gammma = latex(sympy_expr)
+
+print(f"\nManual LaTeX for dGamma/dt:\n{latex_expr_gammma}")
 
 # Save to file
 with open("latex_dtheta_dt.tex", "w") as f:

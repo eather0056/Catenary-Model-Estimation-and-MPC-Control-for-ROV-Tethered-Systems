@@ -1,0 +1,7 @@
+complexity                                                7
+loss                                               0.000216
+equation                      square(x15 * cos(-1.5171528))
+score                                              0.027437
+sympy_format                      x15**2*cos(-1.5171528)**2
+lambda_format    PySRFunction(X=>x15**2*cos(-1.5171528)**2)
+Name: 4, dtype: object

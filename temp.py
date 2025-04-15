@@ -177,11 +177,6 @@ def extract_features(df):
     rel_vec = P1 - P0
     unit_rel = rel_vec / (np.linalg.norm(rel_vec, axis=1, keepdims=True) + 1e-8)
 
-    # Angular states
-    theta = df["Theta"].values.reshape(-1, 1)
-    gamma = df["Gamma"].values.reshape(-1, 1)
-    cos_theta = np.cos(theta)
-    sin_gamma = np.sin(gamma)
 
     # Angle between V1 and cable direction (cosine similarity)
     dot_product = np.sum(V1 * unit_rel, axis=1, keepdims=True)

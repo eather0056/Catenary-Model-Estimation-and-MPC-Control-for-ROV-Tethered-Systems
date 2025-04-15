@@ -1,0 +1,7 @@
+complexity                                              6
+loss                                             0.000822
+equation                      x4 * abs(sin(-0.020949198))
+score                                            0.201142
+sympy_format                      x4*(-sin(-0.020949198))
+lambda_format    PySRFunction(X=>x4*(-sin(-0.020949198)))
+Name: 2, dtype: object
