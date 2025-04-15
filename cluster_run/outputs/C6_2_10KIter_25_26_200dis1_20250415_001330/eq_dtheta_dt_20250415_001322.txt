@@ -1,0 +1,7 @@
+complexity                                                       7
+loss                                                      0.001459
+score                                                     0.130289
+equation                  ((x4 + (0.48640072 * x15)) * 0.06295495)
+sympy_format                 0.030621333007564*x15 + 0.06295495*x4
+lambda_format    PySRFunction(X=>0.030621333007564*x15 + 0.0629...
+Name: 3, dtype: object

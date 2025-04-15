@@ -23,7 +23,7 @@ from main_fun import *
 
 # === Define The Run Name ===
 # This is the name of the run that will be used in W&B and the output directory.
-Run_Name = "C6_2_1KIter_11f"
+Run_Name = "C6_2_1KIter_Test"
 
 # === Set the timestamp for the run ===
 # This will be used to create unique filenames for the output files.

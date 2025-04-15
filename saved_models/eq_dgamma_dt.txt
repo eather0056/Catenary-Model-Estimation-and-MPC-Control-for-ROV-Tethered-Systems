@@ -1,0 +1,7 @@
+complexity                                3
+loss                               0.000272
+score                               0.40764
+equation                        (x15 - x17)
+sympy_format                      x15 - x17
+lambda_format    PySRFunction(X=>x15 - x17)
+Name: 1, dtype: object

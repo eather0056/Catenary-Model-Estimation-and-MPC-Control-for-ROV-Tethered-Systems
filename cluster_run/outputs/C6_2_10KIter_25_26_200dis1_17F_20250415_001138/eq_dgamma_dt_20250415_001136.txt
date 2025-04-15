@@ -1,0 +1,7 @@
+complexity                                                       9
+loss                                                      0.001417
+score                                                     0.089785
+equation                 (-0.029644985 * ((x4 - x1) + (x4 + x15)))
+sympy_format      0.029644985*x1 - 0.029644985*x15 - 0.05928997*x4
+lambda_format    PySRFunction(X=>0.029644985*x1 - 0.029644985*x...
+Name: 4, dtype: object
