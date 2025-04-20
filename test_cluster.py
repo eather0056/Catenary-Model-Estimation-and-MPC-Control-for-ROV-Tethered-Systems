@@ -6,17 +6,17 @@ from sklearn.metrics import r2_score
 import joblib
 import pathlib
 import os
+from main_fun import *
 
 # pathlib.PosixPath = pathlib.WindowsPath
 
 # === Load Models and Scaler ===
-model_theta = joblib.load("saved_models/model_dtheta_dt.pkl")  
-model_gamma = joblib.load("saved_models/model_dgamma_dt.pkl")  
-scaler = joblib.load("saved_models/scaler.pkl")  
+model_theta = joblib.load("outputs/C6_all_10k_20250416_103809/model_dtheta_dt.pkl")  
+model_gamma = joblib.load("outputs/C6_all_10k_20250416_103809/model_dgamma_dt.pkl")  
+scaler = joblib.load("outputs/C6_all_10k_20250416_103809/scaler.pkl")  
 
 # === Load and Preprocess Dataset ===
-file_name = "L_dynamique6y100dis1_0020.csv"
-
+file_name = "L_dynamique6y100dis2_0021.csv"
 
 output_dir = "Results/mode_test"
 output_path = pathlib.Path(output_dir)
@@ -26,33 +26,6 @@ output_path.mkdir(parents=True, exist_ok=True)
 file_path = pathlib.Path("Data") / file_name
 df = pd.read_csv(file_path)
 
-def extract_features(df):
-    P0 = df[["rod_end X", "rod_end Y", "rod_end Z"]].values / 1000
-    P1 = df[["robot_cable_attach_point X", "robot_cable_attach_point Y", "robot_cable_attach_point Z"]].values / 1000
-    V1 = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values
-    time = df["Time"].values
-
-    acc_x = np.gradient(df["rob_cor_speed X"].values, time)
-    acc_y = np.gradient(df["rob_cor_speed Y"].values, time)
-    acc_z = np.gradient(df["rob_cor_speed Z"].values, time)
-    A1 = np.stack([acc_x, acc_y, acc_z], axis=1)
-
-    rel_vec = P1 - P0
-    unit_rel = rel_vec / (np.linalg.norm(rel_vec, axis=1, keepdims=True) + 1e-8)
-    tension = np.clip(np.linalg.norm(rel_vec, axis=1, keepdims=True), 1e-5, 10)
-
-    dot_product = np.sum(V1 * unit_rel, axis=1, keepdims=True)
-    norm_v1 = np.linalg.norm(V1, axis=1, keepdims=True) + 1e-8
-    angle_proj = np.clip(dot_product / norm_v1, -1, 1)
-
-    theta = df["Theta"].values.reshape(-1, 1)
-    gamma = df["Gamma"].values.reshape(-1, 1)
-    theta_prev = np.roll(theta, 1)
-    gamma_prev = np.roll(gamma, 1)
-    theta_prev[0] = theta[0]
-    gamma_prev[0] = gamma[0]
-
-    return np.hstack([P1, V1, A1, unit_rel, tension, angle_proj, theta, gamma, theta_prev, gamma_prev])
 
 # === Extract Features ===
 X = extract_features(df)
@@ -78,6 +51,13 @@ theta_true = df["Theta"].values
 gamma_true = df["Gamma"].values
 theta_error = theta_true - theta_est
 gamma_error = gamma_true - gamma_est
+
+# === print these equeation ===
+print(f"\neq_dtheta_dt: {model_theta.get_best()}")
+print(f"\neq_dgamma_dt: {model_gamma.get_best()}")
+
+# print(model_theta.equations_[["complexity", "loss", "equation"]])
+# print(model_gamma.equations_[["complexity", "loss", "equation"]])
 
 # === R² Scores ===
 print(f"\nR² Score for Theta(t): {r2_score(theta_true, theta_est):.4f}")

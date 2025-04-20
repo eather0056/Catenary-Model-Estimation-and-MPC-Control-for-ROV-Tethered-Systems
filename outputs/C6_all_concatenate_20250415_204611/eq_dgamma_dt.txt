@@ -1,0 +1,7 @@
+complexity                                                       9
+loss                                                      0.000639
+score                                                     0.369398
+equation                (sin((x15 - x17) * -21.81838) * -0.319919)
+sympy_format             0.319919*sin(21.81838*x15 - 21.81838*x17)
+lambda_format    PySRFunction(X=>0.319919*sin(21.81838*x15 - 21...
+Name: 5, dtype: object

@@ -1,0 +1,7 @@
+complexity                                                       9
+loss                                                      0.001013
+score                                                     0.287582
+equation            ((0.022393199 * (x2 - x5)) * (x17 + 0.810647))
+sympy_format     (x17 + 0.810647)*(0.022393199*x2 - 0.022393199...
+lambda_format    PySRFunction(X=>(x17 + 0.810647)*(0.022393199*...
+Name: 6, dtype: object

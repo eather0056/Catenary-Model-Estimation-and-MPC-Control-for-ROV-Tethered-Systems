@@ -23,7 +23,7 @@ from main_fun import *
 
 # === Define The Run Name ===
 # This is the name of the run that will be used in W&B and the output directory.
-Run_Name = "C6_6_concatenate"
+Run_Name = "C6_all_10k"
 
 # === Set the timestamp for the run ===
 # This will be used to create unique filenames for the output files.
@@ -37,11 +37,11 @@ wandb.init(
     entity="eather0056",
     name=f"{Run_Name}_{timestamp}",
     tags=["symbolic", "dynamics", "nonlinear"],
-    notes="Tanning for theta/gamma symbolic equations, 6 6x100dis_2 cable 6 dataset used load type concatenate, feature used [P1, V1, A1, unit_rel, tension, angle_proj, theta, gamma, theta_prev, gamma_prev].",
+    notes="Tanning for theta/gamma symbolic equations, All cable 6 dataset used load type concatenate, feature used [P1, V1, A1, unit_rel, tension, angle_proj, theta, gamma, theta_prev, gamma_prev].",
     config={
         "model": "PySR",
         "task": "Differential Equation Discovery",
-        "niterations": 1000,
+        "niterations": 10000,
         "binary_operators": ["+", "-", "*", "/"],
         "complexity_of_operators": {"/": 5, "square": 2, "tanh": 3, "sin": 2, "cos": 2},
         "unary_operators": unary_ops,
@@ -95,17 +95,17 @@ train_files = [
     "Data/L_dynamique6x200dis2_0030.csv",  
     "Data/L_dynamique6x200dis2_0031.csv",  
     "Data/L_dynamique6x200dis2_0032.csv",  
-    # "Data/L_dynamique6y100dis1_0018.csv",  
-    # "Data/L_dynamique6y100dis1_0019.csv",  
-    # "Data/L_dynamique6y100dis1_0020.csv",  
-    # "Data/L_dynamique6y100dis2_0021.csv",  
-    # "Data/L_dynamique6y100dis2_0022.csv",  
-    # "Data/L_dynamique6y100dis2_0023.csv",  
-    # "Data/L_dynamique6y200dis1_0025.csv",  
-    # "Data/L_dynamique6y200dis1_0026.csv",  
-    # "Data/L_dynamique6y200dis2_0027.csv",  
-    # "Data/L_dynamique6y200dis2_0028.csv",  
-    # "Data/L_dynamique6y200dis2_0029.csv"  
+    "Data/L_dynamique6y100dis1_0018.csv",  
+    "Data/L_dynamique6y100dis1_0019.csv",  
+    "Data/L_dynamique6y100dis1_0020.csv",  
+    "Data/L_dynamique6y100dis2_0021.csv",  
+    "Data/L_dynamique6y100dis2_0022.csv",  
+    "Data/L_dynamique6y100dis2_0023.csv",  
+    "Data/L_dynamique6y200dis1_0025.csv",  
+    "Data/L_dynamique6y200dis1_0026.csv",  
+    "Data/L_dynamique6y200dis2_0027.csv",  
+    "Data/L_dynamique6y200dis2_0028.csv",  
+    "Data/L_dynamique6y200dis2_0029.csv"  
 ]
 
 # === Test on New Dataset ===
