@@ -381,3 +381,33 @@ artifact.add_dir(os.path.join(output_dir, "dgamma_dt"))
 wandb.log_artifact(artifact)
 
 wandb.finish()
+
+
+
+
+
+
+
+
+\[\dot{\theta} = ({\theta} - {\theta_{t-1}})\]
+\[\dot{\theta} = (-0.046759807 * ({V_{1x}} + {V_{1z}}))\]
+\[\dot{\theta} = (({\theta} - {\theta_{t-1}}) * abs({\theta}))\]
+\[\dot{\theta} = sin(({\theta} - {\theta_{t-1}}) * 5.576304)\]
+\[\dot{\theta} = (sin(({\theta} - {\theta_{t-1}}) * 18.099586) * 0.27012593)\]
+\[\dot{\theta} = (sin(({\theta} - {\theta_{t-1}}) * (16.874996 + {P_{1x}})) * 0.2861582)\]
+\[\dot{\theta} = (sin(({\theta} - {\theta_{t-1}}) * (16.874933 + abs({\theta_{t-1}}))) * 0.2686853)\]
+\[\dot{\theta} = (sin(({\theta} - {\theta_{t-1}}) * (16.597025 - ({\cos(\phi)} * {V_{1x}}))) * 0.2701145)\]
+\[\dot{\theta} = (sin(({\theta} - {\theta_{t-1}}) * (16.597025 + abs({\cos(\phi)} * {V_{1x}}))) * 0.2701145)\]
+\[\dot{\theta} = (sin(({\theta} - {\theta_{t-1}}) * (16.308876 + ((-1.8301699 - {\gamma_{t-1}}) * {P_{1y}}))) * 0.26937744)\]
+\[\dot{\theta} = (sin(({\theta} - {\theta_{t-1}}) * (16.597025 + abs(({\cos(\phi)} * {V_{1x}}) + {P_{1y}}))) * 0.2701145)\]
+\[\dot{\theta} = (((({\theta} - {\theta_{t-1}}) * 9.300923) * abs(tanh(({\cos(\phi)} - 0.7851154) * -62.661816))) * 0.50246227)\]
+\[\dot{\theta} = (((({\theta} - {\theta_{t-1}}) * 9.3664875) * tanh(square({\gamma}) + abs({\cos(\phi)} - 0.78404826))) * 0.5262877)\]
+\[\dot{\theta} = ((sin(({\theta} - {\theta_{t-1}}) * 9.3664875) * tanh(abs({\gamma}) + abs({\cos(\phi)} - 0.78404826))) * 0.5262877)\]
+\[\dot{\theta} = (((({\theta} - {\theta_{t-1}}) * 9.300921) * tanh(square({\gamma}) + abs(({\cos(\phi)} - 0.92836183) + {V_{1z}}))) * 0.52071655)\]
+\[\dot{\theta} = (((({\theta} - {\theta_{t-1}}) * 9.300921) * abs(tanh((square({\gamma}) - {V_{1z}}) + abs({\cos(\phi)} - 0.62548137)))) * 0.53102064)\]
+\[\dot{\theta} = (((({\theta} - {\theta_{t-1}}) * 9.300921) * tanh(abs((square({\gamma}) - {V_{1z}}) + abs(({\cos(\phi)} + {V_{1z}}) - 0.80052507)))) * 0.53102064)\]
+\[\dot{\theta} = (((({\theta} - {\theta_{t-1}}) * 9.300921) * abs(tanh((square({\gamma} - 0.074196234) - {V_{1z}}) + abs(({\cos(\phi)} + {V_{1z}}) - 0.7873469)))) * 0.5262877)\]
+\[\dot{\theta} = (((({\theta} - {\theta_{t-1}}) * 9.300921) * abs(tanh((square({\gamma} - 0.08047286) - {V_{1z}}) + abs(({\cos(\phi)} + {V_{1z}}) - 0.7873469)))) * abs(-0.5329675))\]
+\[\dot{\theta} = (((({\theta} - {\theta_{t-1}}) * 9.300921) * (abs(tanh((square({\gamma} - 0.074196234) - {V_{1z}}) + abs(({\cos(\phi)} + {V_{1z}}) - 0.7873469))) * 1.011672)) * 0.5262877)\]
+\[\dot{\theta} = ((sin(({\theta} - {\theta_{t-1}}) * (9.988597 + -0.20168042)) * abs(tanh((abs({\gamma}) - {V_{1z}}) + abs((({\cos(\phi)} + {V_{1z}}) - 0.8631762) * 0.7786671)))) * 0.52071655)\]
+\[\dot{\theta} = (((({\theta} - {\theta_{t-1}}) * (9.300921 - (-0.13652867 * {\cos(\phi)}))) * abs(tanh((square({\gamma} - 0.08047286) - {V_{1z}}) + abs(({\cos(\phi)} + {V_{1z}}) - 0.7873469)))) * 0.5262877)\]
