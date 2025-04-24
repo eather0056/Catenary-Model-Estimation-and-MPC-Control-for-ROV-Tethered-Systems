@@ -1,0 +1,1 @@
+{"EL_residual_mse_gamma":3.795032713644172,"best_lagrangian":"(((0.7033429 * (x3 + sin(x1 + 0.046155024))) - x2) * x3)","_timestamp":1.7454046829679673e+09,"_runtime":213.862492714,"_step":0,"_wandb":{"runtime":214},"EL_residual_mse_theta":1.4454851807006288}

@@ -1,0 +1,99 @@
+{
+  "os": "Linux-6.1.96-1.el9.elrepo.x86_64-x86_64-with-glibc2.34",
+  "python": "CPython 3.10.16",
+  "startedAt": "2025-04-23T10:19:49.542011Z",
+  "program": "/home/mundus/mdeowan698/Catenary_Dynamic/LagrangianModelEstimator.py",
+  "codePath": "LagrangianModelEstimator.py",
+  "git": {
+    "remote": "git@github.com:eather0056/Catenary-Model-Estimation-and-MPC-Control-for-ROV-Tethered-Systems.git",
+    "commit": "e675dead4478feb80bd3060a4a9efde8c6b6c38a"
+  },
+  "email": "mdeather0056@gmail.com",
+  "root": "/home/mundus/mdeowan698/Catenary_Dynamic",
+  "host": "lisnode2",
+  "executable": "/mundus/mdeowan698/miniconda3/envs/cad/bin/python",
+  "codePathLocal": "LagrangianModelEstimator.py",
+  "cpu_count": 20,
+  "cpu_count_logical": 40,
+  "gpu": "NVIDIA A40",
+  "gpu_count": 1,
+  "disk": {
+    "/": {
+      "total": "36633051136",
+      "used": "4537782272"
+    }
+  },
+  "memory": {
+    "total": "371291312128"
+  },
+  "cpu": {
+    "count": 20,
+    "countLogical": 40
+  },
+  "gpu_nvidia": [
+    {
+      "name": "NVIDIA A40",
+      "memoryTotal": "48305799168",
+      "cudaCores": 10752,
+      "architecture": "Ampere"
+    }
+  ],
+  "slurm": {
+    "cluster_name": "liscluster",
+    "conf": "/etc/slurm/slurm.conf",
+    "cpu_bind": "quiet,mask_cpu:0x8000080000",
+    "cpu_bind_list": "0x8000080000",
+    "cpu_bind_type": "mask_cpu:",
+    "cpu_bind_verbose": "quiet",
+    "cpus_on_node": "2",
+    "distribution": "cyclic",
+    "gpus_on_node": "1",
+    "gtids": "0",
+    "job_cpus_per_node": "2",
+    "job_end_time": "1745408197",
+    "job_gid": "15107",
+    "job_group": "liscluster",
+    "job_id": "144224",
+    "job_name": "bash",
+    "job_nodelist": "lisnode2",
+    "job_num_nodes": "1",
+    "job_partition": "mundus",
+    "job_qos": "normal",
+    "job_start_time": "1745400997",
+    "job_uid": "14011",
+    "job_user": "mdeowan698",
+    "jobid": "144224",
+    "launch_node_ipaddr": "10.0.0.1",
+    "localid": "0",
+    "mem_per_node": "65536",
+    "nnodes": "1",
+    "nodeid": "0",
+    "nodelist": "lisnode2",
+    "nprocs": "1",
+    "ntasks": "1",
+    "prio_process": "0",
+    "procid": "0",
+    "pty_port": "42373",
+    "pty_win_col": "182",
+    "pty_win_row": "20",
+    "srun_comm_host": "10.0.0.1",
+    "srun_comm_port": "44567",
+    "step_gpus": "6",
+    "step_id": "0",
+    "step_launcher_port": "44567",
+    "step_nodelist": "lisnode2",
+    "step_num_nodes": "1",
+    "step_num_tasks": "1",
+    "step_tasks_per_node": "1",
+    "stepid": "0",
+    "submit_dir": "/home/mundus/mdeowan698/Catenary_Dynamic",
+    "submit_host": "sms-cluster.lis-lab.fr",
+    "task_pid": "2141080",
+    "tasks_per_node": "1",
+    "topology_addr": "lisnode2",
+    "topology_addr_pattern": "node",
+    "umask": "0022",
+    "working_cluster": "liscluster:sms-cluster.lis-lab.fr:6817:9984:109"
+  },
+  "cudaVersion": "12.5"
+}

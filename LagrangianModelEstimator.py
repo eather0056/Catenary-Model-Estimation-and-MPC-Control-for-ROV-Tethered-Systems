@@ -1,0 +1,183 @@
+# Enhanced version of the LagrangianPipeline setup and execution,
+# now with better expression constraints, operator complexity, and seeding.
+
+import os
+import joblib
+import numpy as np
+import pandas as pd
+from pysr import PySRRegressor
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import r2_score
+from datetime import datetime
+import wandb
+from main_fun import *
+from lagrangian_pipeline import LagrangianPipeline  # assumes class is defined here
+import matplotlib.pyplot as plt
+
+
+# === Setup ===
+Run_Name = "Lg_C6_split_log"
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+output_dir = f"outputs/{Run_Name}_{timestamp}"
+os.makedirs(output_dir, exist_ok=True)
+os.environ["JULIA_DEBUG"] = "all"
+
+wandb.init(
+    project="Catenary_Dynamics_Differential",
+    entity="eather0056",
+    name=f"{Run_Name}_{timestamp}",
+    tags=["symbolic", "dynamics", "lagrangian", "enhanced"],
+    notes="Improved symbolic Lagrangian training: operator penalties, expression seeds, scaled input.",
+    config={
+        "model": "PySR",
+        "task": "Lagrangian Discovery",
+        "niterations": 20,
+        "binary_operators": ["+", "-", "*", "/"],
+        "unary_operators": ["sin", "cos", "tanh", "exp", "log"],
+        "complexity_of_operators": {"+": 1, "-": 1, "*": 2, "/": 5},
+        "loss": "loss(x, y) = (x - y)^2",
+        "random_state": 42,
+        "maxsize": 30,
+        "verbosity": 1,
+        "procs": 0,
+        "LAGRANGIAN_MODE": "split",  # Options: "full" or "split"
+    }
+)
+
+config = wandb.config
+
+# === Load Data ===
+train_files = [
+    "Data/L_dynamique6x200dis2_0031.csv",
+    "Data/L_dynamique6y200dis2_0029.csv"
+]
+test_files = ["Data/L_dynamique6y200dis1_0024.csv"]
+
+df_train = load_and_concat(train_files)
+df_test = load_and_concat(test_files)
+
+# === Run Lagrangian Pipeline ===
+pipeline = LagrangianPipeline(
+    model_params=dict(
+        niterations=config.niterations,
+        binary_operators=config.binary_operators,
+        unary_operators=config.unary_operators,
+        complexity_of_operators=config.complexity_of_operators,
+        model_selection="best",
+        loss=config.loss,
+        verbosity=config.verbosity,
+        procs=config.procs,
+        maxsize=config.maxsize,
+        extra_sympy_mappings={"log": "log"},
+    ),
+    mode=config.LAGRANGIAN_MODE  # <--- NEW
+)
+
+LAGRANGIAN_MODE = "split"
+# Ensure features are diverse and scaled (if necessary inside pipeline)
+mse_theta, mse_gamma = pipeline.run(df_train, output_dir)
+
+
+# Optional: print input stats to check for variation
+print("θ range:", np.min(pipeline.theta), np.max(pipeline.theta))
+print("γ range:", np.min(pipeline.gamma), np.max(pipeline.gamma))
+print("dθ mean/std:", np.mean(pipeline.dtheta), np.std(pipeline.dtheta))
+print("dγ mean/std:", np.mean(pipeline.dgamma), np.std(pipeline.dgamma))
+
+
+if LAGRANGIAN_MODE == "split":
+    with open(os.path.join(output_dir, "T_expression.txt"), "w") as f:
+        f.write(str(pipeline.T_expr_str))
+    with open(os.path.join(output_dir, "V_expression.txt"), "w") as f:
+        f.write(str(pipeline.V_expr_str))
+    wandb.save(os.path.join(output_dir, "T_expression.txt"))
+    wandb.save(os.path.join(output_dir, "V_expression.txt"))
+
+
+# === Log Results ===
+wandb.log({
+    "EL_residual_mse_theta": mse_theta,
+    "EL_residual_mse_gamma": mse_gamma,
+    "best_lagrangian": str(pipeline.best_eq["equation"])
+})
+
+if LAGRANGIAN_MODE == "split":
+    wandb.log({
+        "T_expression": pipeline.T_expr_str,
+        "V_expression": pipeline.V_expr_str,
+    })
+
+
+# === Save model ===
+joblib.dump(pipeline.model, os.path.join(output_dir, "model_lagrangian.pkl"))
+
+with open(os.path.join(output_dir, "best_lagrangian.txt"), "w") as f:
+    f.write(str(pipeline.best_eq["equation"]))
+
+# === Save symbolic equation history ===
+pipeline.model.equations_.to_csv(os.path.join(output_dir, "lagrangian_equation_history.csv"), index=False)
+
+# === Save time-series and derivatives ===
+np.savez(
+    os.path.join(output_dir, "trajectory_data.npz"),
+    theta=pipeline.theta,
+    gamma=pipeline.gamma,
+    dtheta=pipeline.dtheta,
+    dgamma=pipeline.dgamma,
+    ddtheta=pipeline.ddtheta,
+    ddgamma=pipeline.ddgamma,
+    time=df_train["Time"].values,
+    X_lagr=pipeline.X_lagr,
+)
+
+# === Save E-L residuals for plotting or inspection ===
+res_θ = pipeline.EOM_θ_func(pipeline.theta, pipeline.gamma, pipeline.dtheta, pipeline.dgamma, pipeline.ddtheta, pipeline.ddgamma)
+res_γ = pipeline.EOM_γ_func(pipeline.theta, pipeline.gamma, pipeline.dtheta, pipeline.dgamma, pipeline.ddtheta, pipeline.ddgamma)
+np.savez(
+    os.path.join(output_dir, "euler_lagrange_residuals.npz"),
+    residual_theta=res_θ,
+    residual_gamma=res_γ,
+)
+
+# === Plot E-L residuals ===
+plt.figure(figsize=(12, 4))
+plt.subplot(1, 2, 1)
+plt.plot(df_train["Time"], res_θ, label="E-L Residual θ")
+plt.title("Euler–Lagrange Residual (θ)")
+plt.xlabel("Time")
+plt.ylabel("Residual")
+plt.grid(True)
+
+plt.subplot(1, 2, 2)
+plt.plot(df_train["Time"], res_γ, label="E-L Residual γ", color="orange")
+plt.title("Euler–Lagrange Residual (γ)")
+plt.xlabel("Time")
+plt.ylabel("Residual")
+plt.grid(True)
+
+plt.tight_layout()
+plt.savefig(os.path.join(output_dir, "euler_lagrange_residuals.png"))
+plt.close()
+
+time = df_train["Time"].values
+
+plt.figure(figsize=(10, 4))
+plt.plot(time, pipeline.EOM_θ_func(pipeline.theta, pipeline.gamma, pipeline.dtheta, pipeline.dgamma, pipeline.ddtheta, pipeline.ddgamma), label="θ residual")
+plt.plot(time, pipeline.EOM_γ_func(pipeline.theta, pipeline.gamma, pipeline.dtheta, pipeline.dgamma, pipeline.ddtheta, pipeline.ddgamma), label="γ residual")
+plt.legend()
+plt.title("Euler–Lagrange Residuals")
+plt.xlabel("Time")
+plt.ylabel("Residual")
+plt.grid(True)
+plt.tight_layout()
+plt.savefig(os.path.join(output_dir, "residuals_plot.png"))
+plt.show()
+
+wandb.save(os.path.join(output_dir, "model_lagrangian.pkl"))
+wandb.save(os.path.join(output_dir, "best_lagrangian.txt"))
+
+artifact = wandb.Artifact(f"Lagrangian_model_{Run_Name}", type="model")
+artifact.add_dir(output_dir)
+wandb.log_artifact(artifact)
+
+wandb.finish()

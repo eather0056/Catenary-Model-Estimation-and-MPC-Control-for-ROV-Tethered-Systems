@@ -1,0 +1,1 @@
+/home/mundus/mdeowan698/Catenary_Dynamic/outputs/Lg_C6_2_Improved_20250423_120928/model_lagrangian.pkl
