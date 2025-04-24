@@ -13,10 +13,11 @@ import wandb
 from main_fun import *
 from lagrangian_pipeline import LagrangianPipeline  # assumes class is defined here
 import matplotlib.pyplot as plt
+import sympy
 
 
 # === Setup ===
-Run_Name = "Lg_C6_split_log"
+Run_Name = "Lg_C6_full_log"
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 output_dir = f"outputs/{Run_Name}_{timestamp}"
 os.makedirs(output_dir, exist_ok=True)
@@ -40,7 +41,7 @@ wandb.init(
         "maxsize": 30,
         "verbosity": 1,
         "procs": 0,
-        "LAGRANGIAN_MODE": "split",  # Options: "full" or "split"
+        "LAGRANGIAN_MODE": "full",  # Options: "full" or "split"
     }
 )
 
@@ -68,12 +69,20 @@ pipeline = LagrangianPipeline(
         verbosity=config.verbosity,
         procs=config.procs,
         maxsize=config.maxsize,
-        extra_sympy_mappings={"log": "log"},
+        extra_sympy_mappings={
+            "log": sympy.log,
+            "exp": sympy.exp,
+            "sin": sympy.sin,
+            "cos": sympy.cos,
+            "tanh": sympy.tanh,
+            "sqrt": sympy.sqrt
+        },
+
     ),
     mode=config.LAGRANGIAN_MODE  # <--- NEW
 )
 
-LAGRANGIAN_MODE = "split"
+LAGRANGIAN_MODE = "full"
 # Ensure features are diverse and scaled (if necessary inside pipeline)
 mse_theta, mse_gamma = pipeline.run(df_train, output_dir)
 
@@ -90,8 +99,6 @@ if LAGRANGIAN_MODE == "split":
         f.write(str(pipeline.T_expr_str))
     with open(os.path.join(output_dir, "V_expression.txt"), "w") as f:
         f.write(str(pipeline.V_expr_str))
-    wandb.save(os.path.join(output_dir, "T_expression.txt"))
-    wandb.save(os.path.join(output_dir, "V_expression.txt"))
 
 
 # === Log Results to W&B ===
@@ -128,7 +135,12 @@ elif LAGRANGIAN_MODE == "split":
         f.write(f"({pipeline.T_expr_str}) - ({pipeline.V_expr_str})")
 
 # === Save symbolic equation history ===
-pipeline.model.equations_.to_csv(os.path.join(output_dir, "lagrangian_equation_history.csv"), index=False)
+if config.LAGRANGIAN_MODE == "full":
+    pipeline.model.equations_.to_csv(os.path.join(output_dir, "lagrangian_equation_history.csv"), index=False)
+elif config.LAGRANGIAN_MODE == "split":
+    pipeline.model_T.equations_.to_csv(os.path.join(output_dir, "T_equation_history.csv"), index=False)
+    pipeline.model_V.equations_.to_csv(os.path.join(output_dir, "V_equation_history.csv"), index=False)
+
 
 # === Save time-series and derivatives ===
 np.savez(
@@ -144,25 +156,60 @@ np.savez(
 )
 
 # === Save E-L residuals for plotting or inspection ===
-res_θ = pipeline.EOM_θ_func(pipeline.theta, pipeline.gamma, pipeline.dtheta, pipeline.dgamma, pipeline.ddtheta, pipeline.ddgamma)
-res_γ = pipeline.EOM_γ_func(pipeline.theta, pipeline.gamma, pipeline.dtheta, pipeline.dgamma, pipeline.ddtheta, pipeline.ddgamma)
+res_θ = np.array([
+    pipeline.EOM_θ_func(θ, γ, dθ, dγ, ddθ, ddγ)
+    for θ, γ, dθ, dγ, ddθ, ddγ in zip(
+        pipeline.theta,
+        pipeline.gamma,
+        pipeline.dtheta,
+        pipeline.dgamma,
+        pipeline.ddtheta,
+        pipeline.ddgamma
+    )
+])
+
+res_γ = np.array([
+    pipeline.EOM_γ_func(θ, γ, dθ, dγ, ddθ, ddγ)
+    for θ, γ, dθ, dγ, ddθ, ddγ in zip(
+        pipeline.theta,
+        pipeline.gamma,
+        pipeline.dtheta,
+        pipeline.dgamma,
+        pipeline.ddtheta,
+        pipeline.ddgamma
+    )
+])
+
+time = np.asarray(df_train["Time"].values).flatten()
+
+
+# Ensure consistent 1D shapes
+res_θ = np.atleast_1d(res_θ).flatten()
+res_γ = np.atleast_1d(res_γ).flatten()
+time = np.atleast_1d(df_train["Time"].values).flatten()
+
 np.savez(
     os.path.join(output_dir, "euler_lagrange_residuals.npz"),
     residual_theta=res_θ,
     residual_gamma=res_γ,
 )
 
-# === Plot E-L residuals ===
+print("time shape:", time.shape)
+print("res_θ shape:", res_θ.shape)
+print("res_γ shape:", res_γ.shape)
+
+
+# === Plot E-L residuals (two subplots) ===
 plt.figure(figsize=(12, 4))
 plt.subplot(1, 2, 1)
-plt.plot(df_train["Time"], res_θ, label="E-L Residual θ")
+plt.plot(time, res_θ, label="E-L Residual θ")
 plt.title("Euler–Lagrange Residual (θ)")
 plt.xlabel("Time")
 plt.ylabel("Residual")
 plt.grid(True)
 
 plt.subplot(1, 2, 2)
-plt.plot(df_train["Time"], res_γ, label="E-L Residual γ", color="orange")
+plt.plot(time, res_γ, label="E-L Residual γ", color="orange")
 plt.title("Euler–Lagrange Residual (γ)")
 plt.xlabel("Time")
 plt.ylabel("Residual")
@@ -172,11 +219,10 @@ plt.tight_layout()
 plt.savefig(os.path.join(output_dir, "euler_lagrange_residuals.png"))
 plt.close()
 
-time = df_train["Time"].values
-
+# === Plot Combined Residuals (Overlay) ===
 plt.figure(figsize=(10, 4))
-plt.plot(time, pipeline.EOM_θ_func(pipeline.theta, pipeline.gamma, pipeline.dtheta, pipeline.dgamma, pipeline.ddtheta, pipeline.ddgamma), label="θ residual")
-plt.plot(time, pipeline.EOM_γ_func(pipeline.theta, pipeline.gamma, pipeline.dtheta, pipeline.dgamma, pipeline.ddtheta, pipeline.ddgamma), label="γ residual")
+plt.plot(time, res_θ, label="θ residual")
+plt.plot(time, res_γ, label="γ residual")
 plt.legend()
 plt.title("Euler–Lagrange Residuals")
 plt.xlabel("Time")
@@ -184,10 +230,6 @@ plt.ylabel("Residual")
 plt.grid(True)
 plt.tight_layout()
 plt.savefig(os.path.join(output_dir, "residuals_plot.png"))
-plt.show()
-
-wandb.save(os.path.join(output_dir, "model_lagrangian.pkl"))
-wandb.save(os.path.join(output_dir, "best_lagrangian.txt"))
 
 artifact = wandb.Artifact(f"Lagrangian_model_{Run_Name}", type="model")
 artifact.add_dir(output_dir)

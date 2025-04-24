@@ -1,1 +1,0 @@
-/home/mundus/mdeowan698/Catenary_Dynamic/outputs/Lg_C6_2_Improved_20250423_123428/best_lagrangian.txt
