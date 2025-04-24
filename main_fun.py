@@ -187,7 +187,7 @@ def extract_features(df):
     theta_prev[0] = theta[0]
     gamma_prev[0] = gamma[0]
 
-    return np.hstack([P1, V1, A1, unit_rel, tension, angle_proj, theta, gamma, theta_prev, gamma_prev]) # P0, P1, V1, A1, unit_rel, tension, angle_proj
+    return np.hstack([P1, V1, A1, unit_rel, tension, angle_proj, theta, gamma])
 
 # === Derivatives ===
 def compute_derivatives(df):

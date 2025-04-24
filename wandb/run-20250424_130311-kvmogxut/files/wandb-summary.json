@@ -1,0 +1,1 @@
+{"_wandb":{"runtime":1489},"_timestamp":1.7454940800511436e+09,"_runtime":1488.351655137,"_step":0,"EL_residual_mse_theta":5.8076975915997835,"EL_residual_mse_gamma":5.781940722802515,"best_lagrangian":"((x3 * x3) + (x2 * x2))"}

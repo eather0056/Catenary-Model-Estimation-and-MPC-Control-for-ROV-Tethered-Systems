@@ -1,0 +1,1 @@
+{"_wandb":{"runtime":2752},"T_expression":"((x1 * x1) + (x0 * x0))","_timestamp":1.7454954257299492e+09,"_runtime":2750.263147229,"_step":0,"lagrangian_expression":"(((x1 * x1) + (x0 * x0))) - (((x1 * x1) + (x0 * x0)))","EL_residual_mse_gamma":0,"V_expression":"((x1 * x1) + (x0 * x0))","EL_residual_mse_theta":0}

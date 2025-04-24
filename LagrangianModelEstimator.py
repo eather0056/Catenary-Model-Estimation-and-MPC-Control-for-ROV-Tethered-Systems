@@ -17,7 +17,7 @@ import sympy
 
 
 # === Setup ===
-Run_Name = "Lg_C6_full_log"
+Run_Name = "Lg_C6_split_1K_20it"
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 output_dir = f"outputs/{Run_Name}_{timestamp}"
 os.makedirs(output_dir, exist_ok=True)
@@ -28,7 +28,7 @@ wandb.init(
     entity="eather0056",
     name=f"{Run_Name}_{timestamp}",
     tags=["symbolic", "dynamics", "lagrangian", "enhanced"],
-    notes="Improved symbolic Lagrangian training: operator penalties, expression seeds, scaled input.",
+    notes="Improved symbolic Lagrangian training: operator penalties, expression seeds, scaled input split featue used P1, V1, A1, unit_rel, tension, angle_proj, theta, gamma.",
     config={
         "model": "PySR",
         "task": "Lagrangian Discovery",
@@ -41,7 +41,7 @@ wandb.init(
         "maxsize": 30,
         "verbosity": 1,
         "procs": 0,
-        "LAGRANGIAN_MODE": "full",  # Options: "full" or "split"
+        "LAGRANGIAN_MODE": "split",  # Options: "split" or "full"
     }
 )
 
@@ -82,7 +82,7 @@ pipeline = LagrangianPipeline(
     mode=config.LAGRANGIAN_MODE  # <--- NEW
 )
 
-LAGRANGIAN_MODE = "full"
+LAGRANGIAN_MODE = "split"
 # Ensure features are diverse and scaled (if necessary inside pipeline)
 mse_theta, mse_gamma = pipeline.run(df_train, output_dir)
 
@@ -230,6 +230,47 @@ plt.ylabel("Residual")
 plt.grid(True)
 plt.tight_layout()
 plt.savefig(os.path.join(output_dir, "residuals_plot.png"))
+
+
+# === Prepare test set for evaluation ===
+pipeline.prepare_data(df_test)
+
+res_θ_test = np.array([
+    pipeline.EOM_θ_func(θ, γ, dθ, dγ, ddθ, ddγ)
+    for θ, γ, dθ, dγ, ddθ, ddγ in zip(
+        pipeline.theta, pipeline.gamma,
+        pipeline.dtheta, pipeline.dgamma,
+        pipeline.ddtheta, pipeline.ddgamma
+    )
+])
+
+res_γ_test = np.array([
+    pipeline.EOM_γ_func(θ, γ, dθ, dγ, ddθ, ddγ)
+    for θ, γ, dθ, dγ, ddθ, ddγ in zip(
+        pipeline.theta, pipeline.gamma,
+        pipeline.dtheta, pipeline.dgamma,
+        pipeline.ddtheta, pipeline.ddgamma
+    )
+])
+
+# === Metrics ===
+mse_theta_test = np.mean(res_θ_test**2)
+mse_gamma_test = np.mean(res_γ_test**2)
+print(f"[TEST] E-L residuals MSE: θ={mse_theta_test:.6e}, γ={mse_gamma_test:.6e}")
+
+# === Log to W&B ===
+wandb.log({
+    "test_EL_residual_mse_theta": mse_theta_test,
+    "test_EL_residual_mse_gamma": mse_gamma_test,
+})
+
+# === Save or plot residuals if needed ===
+np.savez(
+    os.path.join(output_dir, "test_euler_lagrange_residuals.npz"),
+    residual_theta=res_θ_test,
+    residual_gamma=res_γ_test,
+)
+
 
 artifact = wandb.Artifact(f"Lagrangian_model_{Run_Name}", type="model")
 artifact.add_dir(output_dir)
