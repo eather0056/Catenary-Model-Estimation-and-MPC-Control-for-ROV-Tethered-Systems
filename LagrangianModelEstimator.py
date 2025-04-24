@@ -94,25 +94,38 @@ if LAGRANGIAN_MODE == "split":
     wandb.save(os.path.join(output_dir, "V_expression.txt"))
 
 
-# === Log Results ===
-wandb.log({
+# === Log Results to W&B ===
+log_dict = {
     "EL_residual_mse_theta": mse_theta,
     "EL_residual_mse_gamma": mse_gamma,
-    "best_lagrangian": str(pipeline.best_eq["equation"])
-})
+}
 
-if LAGRANGIAN_MODE == "split":
-    wandb.log({
-        "T_expression": pipeline.T_expr_str,
-        "V_expression": pipeline.V_expr_str,
-    })
+if LAGRANGIAN_MODE == "full":
+    log_dict["best_lagrangian"] = str(pipeline.best_eq["equation"])
+else:  # split mode
+    log_dict["T_expression"] = pipeline.T_expr_str
+    log_dict["V_expression"] = pipeline.V_expr_str
+    log_dict["lagrangian_expression"] = f"({pipeline.T_expr_str}) - ({pipeline.V_expr_str})"
+
+wandb.log(log_dict)
+
 
 
 # === Save model ===
-joblib.dump(pipeline.model, os.path.join(output_dir, "model_lagrangian.pkl"))
-
-with open(os.path.join(output_dir, "best_lagrangian.txt"), "w") as f:
-    f.write(str(pipeline.best_eq["equation"]))
+if LAGRANGIAN_MODE == "full":
+    joblib.dump(pipeline.model, os.path.join(output_dir, "model_lagrangian.pkl"))
+    with open(os.path.join(output_dir, "best_lagrangian.txt"), "w") as f:
+        f.write(str(pipeline.best_eq["equation"]))
+    pipeline.model.equations_.to_csv(os.path.join(output_dir, "lagrangian_equation_history.csv"), index=False)
+elif LAGRANGIAN_MODE == "split":
+    joblib.dump(pipeline.model_T, os.path.join(output_dir, "model_T.pkl"))
+    joblib.dump(pipeline.model_V, os.path.join(output_dir, "model_V.pkl"))
+    with open(os.path.join(output_dir, "T_expression.txt"), "w") as f:
+        f.write(str(pipeline.T_expr_str))
+    with open(os.path.join(output_dir, "V_expression.txt"), "w") as f:
+        f.write(str(pipeline.V_expr_str))
+    with open(os.path.join(output_dir, "lagrangian_expression.txt"), "w") as f:
+        f.write(f"({pipeline.T_expr_str}) - ({pipeline.V_expr_str})")
 
 # === Save symbolic equation history ===
 pipeline.model.equations_.to_csv(os.path.join(output_dir, "lagrangian_equation_history.csv"), index=False)
