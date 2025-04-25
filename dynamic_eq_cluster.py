@@ -23,7 +23,7 @@ from main_fun import *
 
 # === Define The Run Name ===
 # This is the name of the run that will be used in W&B and the output directory.
-Run_Name = "C6_all_10k"
+Run_Name = "C6_6_FF_1k"
 
 # === Set the timestamp for the run ===
 # This will be used to create unique filenames for the output files.
@@ -37,13 +37,13 @@ wandb.init(
     entity="eather0056",
     name=f"{Run_Name}_{timestamp}",
     tags=["symbolic", "dynamics", "nonlinear"],
-    notes="Tanning for theta/gamma symbolic equations, All cable 6 dataset used load type concatenate, feature used [P1, V1, A1, unit_rel, tension, angle_proj, theta, gamma, theta_prev, gamma_prev].",
+    notes="Tanning for theta/gamma symbolic equations, 2 cable 6 dataset used load type concatenate, feature used [P1, V1, A1, unit_rel, tension, angle_proj, theta, gamma] and Feaure Filter.",
     config={
         "model": "PySR",
         "task": "Differential Equation Discovery",
-        "niterations": 10000,
+        "niterations": 1000,
         "binary_operators": ["+", "-", "*", "/"],
-        "complexity_of_operators": {"/": 5, "square": 2, "tanh": 3, "sin": 2, "cos": 2},
+        # "complexity_of_operators": {"/": 5, "square": 2, "tanh": 3, "sin": 2, "cos": 2},
         "unary_operators": unary_ops,
         "batching": True,
         "batch_size": 5000,
@@ -64,7 +64,7 @@ common_params = dict(
     niterations=config["niterations"],
     binary_operators=config["binary_operators"],
     unary_operators=config["unary_operators"],
-    complexity_of_operators=config["complexity_of_operators"],
+    # complexity_of_operators=config["complexity_of_operators"],
     model_selection=config["model_selection"],
     loss=config["loss"],
     verbosity=config["verbosity"],
@@ -76,6 +76,24 @@ common_params = dict(
     maxsize=config["maxsize"],
     should_simplify=config["should_simplify"],
 )
+
+feature_units = [
+    "m", "m", "m",         # P1
+    "m", "m", "m",         # P1
+    "m/s", "m/s", "m/s",             # V1
+    "m/s²", "m/s²", "m/s²",          # A1
+    "unitless", "unitless", "unitless",  # V1_unit
+    "unitless", "unitless", "unitless",  # A1_unit
+    "unitless", "unitless", "unitless",  # unit_rel
+    "m",                             # tension
+    "m/s",                           # speed_norm
+    "m/s²",                          # acc_norm
+    "unitless",                      # angle_proj
+    "m²/s³",                         # dot_VA
+    "m²/s³", "m²/s³", "m²/s³",       # cross_VA
+    "rad",                           # theta
+    "rad"                            # gamma
+]
 
 # === Set up output directory ===
 # This will be used to save the output files and models.
@@ -89,12 +107,12 @@ os.makedirs(output_dir, exist_ok=True)
 
 # === Load and Combine Training Datasets ===
 train_files = [
-    "Data/L_dynamique6x100dis2_0033.csv",  
-    "Data/L_dynamique6x100dis2_0034.csv",  
-    "Data/L_dynamique6x100dis2_0035.csv",  
-    "Data/L_dynamique6x200dis2_0030.csv",  
-    "Data/L_dynamique6x200dis2_0031.csv",  
-    "Data/L_dynamique6x200dis2_0032.csv",  
+    # "Data/L_dynamique6x100dis2_0033.csv",  
+    # "Data/L_dynamique6x100dis2_0034.csv",  
+    # "Data/L_dynamique6x100dis2_0035.csv",  
+    # "Data/L_dynamique6x200dis2_0030.csv",  
+    # "Data/L_dynamique6x200dis2_0031.csv",  
+    # "Data/L_dynamique6x200dis2_0032.csv",  
     "Data/L_dynamique6y100dis1_0018.csv",  
     "Data/L_dynamique6y100dis1_0019.csv",  
     "Data/L_dynamique6y100dis1_0020.csv",  
@@ -120,6 +138,10 @@ df_test = load_and_concat(test_files)
 
 
 X_train = extract_features(df_train)
+# Filter features for unit consistency
+safe_indices = get_unit_safe_indices(feature_units)
+X_train = X_train[:, safe_indices]
+
 y_dtheta_dt_train, y_dgamma_dt_train = compute_derivatives(df_train)
 
 scaler = StandardScaler()
@@ -170,6 +192,7 @@ joblib.dump(scaler, os.path.join(output_dir, f"scaler.pkl"))
 
 # === Save Predictions for Inspection ===
 X_test = extract_features(df_test)
+X_test = X_test[:, safe_indices]
 X_scaled = scaler.transform(X_test)
 time = df_test["Time"].values
 
@@ -199,6 +222,8 @@ log_scatter_plot(gamma_true, gamma_est, "dGamma_dt", output_dir)
 eq_str = str(model_dtheta_dt.get_best()["equation"])
 used_features = Counter(re.findall(r"x\d+", eq_str))
 wandb.log({f"feature_usage_dtheta_dt/{k}": v for k, v in used_features.items()})
+safe_feature_names = [f"x{i} ({feature_units[i]})" for i in safe_indices]
+wandb.log({"used_features_unit_safe": safe_feature_names})
 
 wandb.log({
     "Number of Features": X_train.shape[1],

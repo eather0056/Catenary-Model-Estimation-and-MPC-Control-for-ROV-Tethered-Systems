@@ -161,33 +161,105 @@ def load_and_concat(files):
     df = pd.concat(dfs, ignore_index=True)
     return df.dropna(subset=['Theta', 'Gamma'])
 
+# def extract_features(df):
+#     P0 = df[["rod_end X", "rod_end Y", "rod_end Z"]].values / 1000
+#     P1 = df[["robot_cable_attach_point X", "robot_cable_attach_point Y", "robot_cable_attach_point Z"]].values / 1000
+#     V1 = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values
+#     time = df["Time"].values
+
+#     acc_x = np.gradient(df["rob_cor_speed X"].values, time)
+#     acc_y = np.gradient(df["rob_cor_speed Y"].values, time)
+#     acc_z = np.gradient(df["rob_cor_speed Z"].values, time)
+#     A1 = np.stack([acc_x, acc_y, acc_z], axis=1)
+
+#     rel_vec = P1 - P0
+#     unit_rel = rel_vec / (np.linalg.norm(rel_vec, axis=1, keepdims=True) + 1e-8)
+#     tension = np.clip(np.linalg.norm(rel_vec, axis=1, keepdims=True), 1e-5, 10)
+
+#     dot_product = np.sum(V1 * unit_rel, axis=1, keepdims=True)
+#     norm_v1 = np.linalg.norm(V1, axis=1, keepdims=True) + 1e-8
+#     angle_proj = np.clip(dot_product / norm_v1, -1, 1)
+
+#     theta = df["Theta"].values.reshape(-1, 1)
+#     gamma = df["Gamma"].values.reshape(-1, 1)
+#     theta_prev = np.roll(theta, 1)
+#     gamma_prev = np.roll(gamma, 1)
+#     theta_prev[0] = theta[0]
+#     gamma_prev[0] = gamma[0]
+
+#     return np.hstack([P1, V1, A1, unit_rel, tension, angle_proj, theta, gamma])
+
 def extract_features(df):
+    # Position [m]
     P0 = df[["rod_end X", "rod_end Y", "rod_end Z"]].values / 1000
     P1 = df[["robot_cable_attach_point X", "robot_cable_attach_point Y", "robot_cable_attach_point Z"]].values / 1000
-    V1 = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values
-    time = df["Time"].values
-
-    acc_x = np.gradient(df["rob_cor_speed X"].values, time)
-    acc_y = np.gradient(df["rob_cor_speed Y"].values, time)
-    acc_z = np.gradient(df["rob_cor_speed Z"].values, time)
-    A1 = np.stack([acc_x, acc_y, acc_z], axis=1)
-
     rel_vec = P1 - P0
-    unit_rel = rel_vec / (np.linalg.norm(rel_vec, axis=1, keepdims=True) + 1e-8)
-    tension = np.clip(np.linalg.norm(rel_vec, axis=1, keepdims=True), 1e-5, 10)
+    norm_rel = np.linalg.norm(rel_vec, axis=1, keepdims=True) + 1e-8
+    unit_rel = rel_vec / norm_rel  # Unitless direction vector
 
-    dot_product = np.sum(V1 * unit_rel, axis=1, keepdims=True)
-    norm_v1 = np.linalg.norm(V1, axis=1, keepdims=True) + 1e-8
-    angle_proj = np.clip(dot_product / norm_v1, -1, 1)
+    # Velocity [m/s]
+    V1 = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values
+    speed_norm = np.linalg.norm(V1, axis=1, keepdims=True) + 1e-8  # [m/s]
+    v_dot_unit = np.sum(V1 * unit_rel, axis=1, keepdims=True)  # [m/s]
+    angle_proj = v_dot_unit / speed_norm  # Unitless (cosine projection)
 
-    theta = df["Theta"].values.reshape(-1, 1)
-    gamma = df["Gamma"].values.reshape(-1, 1)
-    theta_prev = np.roll(theta, 1)
-    gamma_prev = np.roll(gamma, 1)
-    theta_prev[0] = theta[0]
-    gamma_prev[0] = gamma[0]
+    # Acceleration [m/s²]
+    time = df["Time"].values
+    acc_x = np.gradient(V1[:, 0], time)
+    acc_y = np.gradient(V1[:, 1], time)
+    acc_z = np.gradient(V1[:, 2], time)
+    A1 = np.stack([acc_x, acc_y, acc_z], axis=1)
+    acc_norm = np.linalg.norm(A1, axis=1, keepdims=True)  # [m/s²]
 
-    return np.hstack([P1, V1, A1, unit_rel, tension, angle_proj, theta, gamma])
+    # Scalars
+    tension = np.clip(norm_rel, 1e-5, 10)  # [m]
+    theta = df["Theta"].values.reshape(-1, 1)  # [rad]
+    gamma = df["Gamma"].values.reshape(-1, 1)  # [rad]
+
+    # Normalize features for symbolic regression
+    V1_unit = V1 / (speed_norm + 1e-8)  # Unitless
+    A1_unit = A1 / (acc_norm + 1e-8)    # Unitless
+
+    # Optional cross features for physically meaningful terms
+    cross_VA = np.cross(V1, A1)  # [m²/s³]
+    dot_VA = np.sum(V1 * A1, axis=1, keepdims=True)  # [m²/s³]
+
+    return np.hstack([
+        P0,          # [m]
+        P1,          # [m]
+        V1,          # [m/s]
+        A1,          # [m/s²]
+        V1_unit,     # unitless
+        A1_unit,     # unitless
+        unit_rel,    # unitless
+        tension,     # [m]
+        speed_norm,  # [m/s]
+        acc_norm,    # [m/s²]
+        angle_proj,  # unitless
+        dot_VA,      # [m²/s³] (proxy for work/power-type effects)
+        cross_VA,    # [m²/s³]
+        theta,       # [rad]
+        gamma        # [rad]
+    ])
+
+
+# === Feature Filter Logic ===
+def get_unit_safe_indices(feature_units):
+    # Define allowed unit types for operations
+    allowed_units = {"m", "rad", "unitless", "m/s", "m/s²", "m²/s³"}
+
+    # Allowable unary ops for each unit type
+    allowed_unary_ops = {
+        "rad": ["sin", "cos", "tanh", "square", "abs"],
+        "unitless": ["sin", "cos", "tanh", "log", "sqrt", "abs", "square"],
+        "m": ["abs", "square"],
+        "m/s": ["abs", "square"],
+        "m/s²": ["abs", "square"],
+        "m²/s³": ["abs", "square"]
+    }
+
+    # Drop any features with undefined or disallowed units
+    return [i for i, u in enumerate(feature_units) if u in allowed_units]
 
 # === Derivatives ===
 def compute_derivatives(df):

@@ -1,0 +1,10 @@
+Complexity,Loss,Equation
+1,0.0013401527,"2.42772e-8"
+3,0.0010515997,"(0.01808718 * x7)"
+5,0.0010369944,"square(square(-0.178703 * x22))"
+7,0.0010164896,"(square(square(0.21224341) * x7) * x7)"
+10,0.0009321075,"(square(abs(square(sin(sin(0.25022903)))) * x7) * x7)"
+11,0.0008934865,"(square(tanh(square(0.25022903) * (x8 - sin(0.25022903)))) * x7)"
+13,0.00086172536,"(square(square(sin(sin(0.25022903))) * (x7 - abs(sin(x7)))) * x7)"
+14,0.00082679925,"(square(square(abs(0.26947358)) * (x7 - tanh(sin(abs(sin(x7)))))) * x7)"
+17,0.0008132612,"((square(sin(tanh(square(0.25022903)) * (x7 - square(0.8705795)))) / sin(tanh(tanh(0.8705795)))) * x7)"

@@ -1,0 +1,7 @@
+complexity                                            6
+loss                                           0.001687
+score                                          0.113446
+equation                  ((0.0340076 * abs(x3)) * x13)
+sympy_format                      0.0340076*x13*Abs(x3)
+lambda_format    PySRFunction(X=>0.0340076*x13*Abs(x3))
+Name: 3, dtype: object

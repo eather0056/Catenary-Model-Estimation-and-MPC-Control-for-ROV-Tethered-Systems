@@ -17,7 +17,7 @@ import sympy
 
 
 # === Setup ===
-Run_Name = "Lg_C6_split_1K_20it"
+Run_Name = "Lg_Hy_C6_split_1K"
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 output_dir = f"outputs/{Run_Name}_{timestamp}"
 os.makedirs(output_dir, exist_ok=True)
@@ -27,14 +27,14 @@ wandb.init(
     project="Catenary_Dynamics_Differential",
     entity="eather0056",
     name=f"{Run_Name}_{timestamp}",
-    tags=["symbolic", "dynamics", "lagrangian", "enhanced"],
-    notes="Improved symbolic Lagrangian training: operator penalties, expression seeds, scaled input split featue used P1, V1, A1, unit_rel, tension, angle_proj, theta, gamma.",
+    tags=["symbolic", "dynamics", "lagrangian", "Hybrid"],
+    notes="Improved symbolic Hybrid Lagrangian training: operator penalties, expression seeds, scaled input split featue used P1, V1, A1, unit_rel, tension, angle_proj, theta, gamma.",
     config={
         "model": "PySR",
         "task": "Lagrangian Discovery",
-        "niterations": 20,
+        "niterations": 1000,
         "binary_operators": ["+", "-", "*", "/"],
-        "unary_operators": ["sin", "cos", "tanh", "exp", "log"],
+        "unary_operators": ["sin", "cos", "abs", "square", "tanh"],
         "complexity_of_operators": {"+": 1, "-": 1, "*": 2, "/": 5},
         "loss": "loss(x, y) = (x - y)^2",
         "random_state": 42,

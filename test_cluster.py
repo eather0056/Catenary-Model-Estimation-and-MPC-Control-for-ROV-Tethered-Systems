@@ -10,13 +10,15 @@ from main_fun import *
 
 # pathlib.PosixPath = pathlib.WindowsPath
 
+# === Define The Run Name ===
+ranname = "C6_2_FF_1k_20250425_121524"
 # === Load Models and Scaler ===
-model_theta = joblib.load("outputs/C6_all_10k_20250416_103809/model_dtheta_dt.pkl")  
-model_gamma = joblib.load("outputs/C6_all_10k_20250416_103809/model_dgamma_dt.pkl")  
-scaler = joblib.load("outputs/C6_all_10k_20250416_103809/scaler.pkl")  
+model_theta = joblib.load("outputs/C6_2_FF_1k_20250425_121524/model_dtheta_dt.pkl")  
+model_gamma = joblib.load("outputs/C6_2_FF_1k_20250425_121524/model_dgamma_dt.pkl")  
+scaler = joblib.load("outputs/C6_2_FF_1k_20250425_121524/scaler.pkl")  
 
 # === Load and Preprocess Dataset ===
-file_name = "L_dynamique6y100dis2_0021.csv"
+file_name = "L_dynamique6y200dis1_0024.csv"
 
 output_dir = "Results/mode_test"
 output_path = pathlib.Path(output_dir)
@@ -135,4 +137,4 @@ plt.ylabel("Predicted Gamma")
 plt.title("Gamma(t): Pred vs True")
 
 plt.tight_layout()
-plt.savefig(os.path.join( output_dir,f"pred_vs_true_{file_name}.png"))
+plt.savefig(os.path.join( output_dir,f"{ranname}_pred_vs_true_{file_name}.png"))

@@ -1,0 +1,7 @@
+complexity                                                      12
+loss                                                      0.001374
+score                                                     0.086426
+equation         ((0.10681447 * tanh(square(square(x3 + x5)))) ...
+sympy_format       0.10681447*(x13 - 0.7528422)*tanh((x3 + x5)**4)
+lambda_format    PySRFunction(X=>0.10681447*(x13 - 0.7528422)*t...
+Name: 9, dtype: object
