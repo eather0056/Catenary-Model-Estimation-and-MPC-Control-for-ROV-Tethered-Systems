@@ -20,10 +20,11 @@ from scipy.ndimage import gaussian_filter1d
 from collections import Counter
 import re
 from main_fun import *
+from collections import defaultdict
 
 # === Define The Run Name ===
 # This is the name of the run that will be used in W&B and the output directory.
-Run_Name = "C6_6_FF_1k"
+Run_Name = "C6_6_FF_1k_x_cons"
 
 # === Set the timestamp for the run ===
 # This will be used to create unique filenames for the output files.
@@ -32,12 +33,69 @@ os.environ["JULIA_DEBUG"] = "all"
 
 unary_ops = ["sin", "cos", "abs", "square", "tanh"]
 
+feature_names = [
+    "P0_x", "P0_y", "P0_z",           # [m]
+    "P1_x", "P1_y", "P1_z",           # [m]
+    "V1_x", "V1_y", "V1_z",           # [m/s]
+    "A1_x", "A1_y", "A1_z",           # [m/s²]
+    "V1_unit_x", "V1_unit_y", "V1_unit_z",  # unitless
+    "A1_unit_x", "A1_unit_y", "A1_unit_z",  # unitless
+    "unit_rel_x", "unit_rel_y", "unit_rel_z",  # unitless
+    "tension",                        # [m]
+    "speed_norm",                    # [m/s]
+    "acc_norm",                      # [m/s²]
+    "angle_proj",                    # unitless
+    "dot_VA",                        # [m²/s³]
+    "cross_VA_x", "cross_VA_y", "cross_VA_z",  # [m²/s³]
+    "theta",                         # [rad]
+    "gamma"                          # [rad]
+]
+
+# === Define the units for each feature ===
+# This is a list of units corresponding to the feature names.
+feature_units = [
+    "m", "m", "m",         # P1
+    "m", "m", "m",         # P1
+    "m/s", "m/s", "m/s",             # V1
+    "m/s²", "m/s²", "m/s²",          # A1
+    "unitless", "unitless", "unitless",  # V1_unit
+    "unitless", "unitless", "unitless",  # A1_unit
+    "unitless", "unitless", "unitless",  # unit_rel
+    "m",                             # tension
+    "m/s",                           # speed_norm
+    "m/s²",                          # acc_norm
+    "unitless",                      # angle_proj
+    "m²/s³",                         # dot_VA
+    "m²/s³", "m²/s³", "m²/s³",       # cross_VA
+    "rad",                           # theta
+    "rad"                            # gamma
+]
+
+constraints = {
+    "add": {"arity": 2},
+    "sub": {"arity": 2},
+    "mul": {"arity": 2},
+    "div": {"arity": 2},
+    "sqrt": {"arity": 1},
+    "tanh": {"arity": 1},
+    "square": {"arity": 1},
+    "sin": {"arity": 1},
+    "cos": {"arity": 1},
+    "log": {"arity": 1},
+    "exp": {"arity": 1}
+}
+
+# Map unit type → list of feature indices
+unit_to_indices = defaultdict(list)
+for i, u in enumerate(feature_units):
+    unit_to_indices[u].append(i)
+
 wandb.init(
     project="Catenary_Dynamics_Differential",
     entity="eather0056",
     name=f"{Run_Name}_{timestamp}",
     tags=["symbolic", "dynamics", "nonlinear"],
-    notes="Tanning for theta/gamma symbolic equations, 2 cable 6 dataset used load type concatenate, feature used [P1, V1, A1, unit_rel, tension, angle_proj, theta, gamma] and Feaure Filter.",
+    notes="Tanning for theta/gamma symbolic equations, 2 cable 6 dataset used load type concatenate, feature used P0, # [m] P1, # [m] V1, # [m/s] A1, # [m/s²] V1_unit, # unitless A1_unit, # unitless unit_rel, # unitless tension, # [m] speed_norm, # [m/s] acc_norm, # [m/s²] angle_proj, # unitless dot_VA, # [m²/s³] (proxy for work/power-type effects) cross_VA, # [m²/s³] theta, # [rad] gamma # [rad].",
     config={
         "model": "PySR",
         "task": "Differential Equation Discovery",
@@ -75,25 +133,23 @@ common_params = dict(
     procs=config["procs"],
     maxsize=config["maxsize"],
     should_simplify=config["should_simplify"],
+    # feature_names=feature_names,
+    select_k_features=None,
+    constraints=constraints,
+    nested_constraints={
+        "add": [unit_to_indices["m/s"], unit_to_indices["m/s"]],
+        "sub": [unit_to_indices["rad"], unit_to_indices["rad"]],
+        "sin": [unit_to_indices["rad"]],
+        "cos": [unit_to_indices["rad"]],
+        "tanh": [unit_to_indices["unitless"]],
+        "sqrt": [unit_to_indices["unitless"]],
+        "log": [unit_to_indices["unitless"]],
+        "add": unit_to_indices["rad"],       # allow rad + rad
+        "add": unit_to_indices["m"],         # allow m + m
+    }
+
 )
 
-feature_units = [
-    "m", "m", "m",         # P1
-    "m", "m", "m",         # P1
-    "m/s", "m/s", "m/s",             # V1
-    "m/s²", "m/s²", "m/s²",          # A1
-    "unitless", "unitless", "unitless",  # V1_unit
-    "unitless", "unitless", "unitless",  # A1_unit
-    "unitless", "unitless", "unitless",  # unit_rel
-    "m",                             # tension
-    "m/s",                           # speed_norm
-    "m/s²",                          # acc_norm
-    "unitless",                      # angle_proj
-    "m²/s³",                         # dot_VA
-    "m²/s³", "m²/s³", "m²/s³",       # cross_VA
-    "rad",                           # theta
-    "rad"                            # gamma
-]
 
 # === Set up output directory ===
 # This will be used to save the output files and models.
@@ -107,23 +163,23 @@ os.makedirs(output_dir, exist_ok=True)
 
 # === Load and Combine Training Datasets ===
 train_files = [
-    # "Data/L_dynamique6x100dis2_0033.csv",  
-    # "Data/L_dynamique6x100dis2_0034.csv",  
-    # "Data/L_dynamique6x100dis2_0035.csv",  
-    # "Data/L_dynamique6x200dis2_0030.csv",  
-    # "Data/L_dynamique6x200dis2_0031.csv",  
-    # "Data/L_dynamique6x200dis2_0032.csv",  
-    "Data/L_dynamique6y100dis1_0018.csv",  
-    "Data/L_dynamique6y100dis1_0019.csv",  
-    "Data/L_dynamique6y100dis1_0020.csv",  
-    "Data/L_dynamique6y100dis2_0021.csv",  
-    "Data/L_dynamique6y100dis2_0022.csv",  
-    "Data/L_dynamique6y100dis2_0023.csv",  
-    "Data/L_dynamique6y200dis1_0025.csv",  
-    "Data/L_dynamique6y200dis1_0026.csv",  
-    "Data/L_dynamique6y200dis2_0027.csv",  
-    "Data/L_dynamique6y200dis2_0028.csv",  
-    "Data/L_dynamique6y200dis2_0029.csv"  
+    "Data/L_dynamique6x100dis2_0033.csv",  
+    "Data/L_dynamique6x100dis2_0034.csv",  
+    "Data/L_dynamique6x100dis2_0035.csv",  
+    "Data/L_dynamique6x200dis2_0030.csv",  
+    "Data/L_dynamique6x200dis2_0031.csv",  
+    "Data/L_dynamique6x200dis2_0032.csv",  
+    # "Data/L_dynamique6y100dis1_0018.csv",  
+    # "Data/L_dynamique6y100dis1_0019.csv",  
+    # "Data/L_dynamique6y100dis1_0020.csv",  
+    # "Data/L_dynamique6y100dis2_0021.csv",  
+    # "Data/L_dynamique6y100dis2_0022.csv",  
+    # "Data/L_dynamique6y100dis2_0023.csv",  
+    # "Data/L_dynamique6y200dis1_0025.csv",  
+    # "Data/L_dynamique6y200dis1_0026.csv",  
+    # "Data/L_dynamique6y200dis2_0027.csv",  
+    # "Data/L_dynamique6y200dis2_0028.csv",  
+    # "Data/L_dynamique6y200dis2_0029.csv"  
 ]
 
 # === Test on New Dataset ===
@@ -163,7 +219,7 @@ os.makedirs(dgamma_out, exist_ok=True)
 os.chdir(dtheta_out)
 log_pysr_progress(model_dtheta_dt, "dTheta_dt", wandb.config["niterations"])
 print("Training model for dTheta/dt...")
-model_dtheta_dt.fit(X_train_scaled, y_dtheta_dt_train)
+model_dtheta_dt.fit(X_train_scaled, y_dtheta_dt_train, feature_names=feature_names)
 model_dtheta_dt._finished = True
 os.chdir(original_cwd)
 
@@ -171,7 +227,7 @@ os.chdir(original_cwd)
 os.chdir(dgamma_out)
 log_pysr_progress(model_dgamma_dt, "dGamma_dt", wandb.config["niterations"])
 print("Training model for dGamma/dt...")
-model_dgamma_dt.fit(X_train_scaled, y_dgamma_dt_train)
+model_dgamma_dt.fit(X_train_scaled, y_dgamma_dt_train, feature_names=feature_names)
 model_dgamma_dt._finished = True
 os.chdir(original_cwd)
 
