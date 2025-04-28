@@ -1,0 +1,7 @@
+complexity                                                       8
+loss                                                      0.002075
+score                                                     0.164665
+equation              (abs(-0.062499296 * x11) * (x6 - 0.3343871))
+sympy_format                 0.062499296*(x6 - 0.3343871)*Abs(x11)
+lambda_format    PySRFunction(X=>0.062499296*(x6 - 0.3343871)*A...
+Name: 6, dtype: object

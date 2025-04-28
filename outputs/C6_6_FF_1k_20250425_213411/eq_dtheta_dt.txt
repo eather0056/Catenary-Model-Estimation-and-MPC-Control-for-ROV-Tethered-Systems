@@ -1,0 +1,7 @@
+complexity                                                       8
+loss                                                      0.000653
+score                                                     0.110499
+equation                ((0.008527668 * (square(x7) + x29)) * x13)
+sympy_format             x13*(0.008527668*x29 + 0.008527668*x7**2)
+lambda_format    PySRFunction(X=>x13*(0.008527668*x29 + 0.00852...
+Name: 5, dtype: object

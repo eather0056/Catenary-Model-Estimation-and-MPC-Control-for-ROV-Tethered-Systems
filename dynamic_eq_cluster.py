@@ -24,7 +24,7 @@ from collections import defaultdict
 
 # === Define The Run Name ===
 # This is the name of the run that will be used in W&B and the output directory.
-Run_Name = "C6_6_FF_1k_x_cons"
+Run_Name = "C6_6_FF_20"
 
 # === Set the timestamp for the run ===
 # This will be used to create unique filenames for the output files.
@@ -33,73 +33,16 @@ os.environ["JULIA_DEBUG"] = "all"
 
 unary_ops = ["sin", "cos", "abs", "square", "tanh"]
 
-feature_names = [
-    "P0_x", "P0_y", "P0_z",           # [m]
-    "P1_x", "P1_y", "P1_z",           # [m]
-    "V1_x", "V1_y", "V1_z",           # [m/s]
-    "A1_x", "A1_y", "A1_z",           # [m/s²]
-    "V1_unit_x", "V1_unit_y", "V1_unit_z",  # unitless
-    "A1_unit_x", "A1_unit_y", "A1_unit_z",  # unitless
-    "unit_rel_x", "unit_rel_y", "unit_rel_z",  # unitless
-    "tension",                        # [m]
-    "speed_norm",                    # [m/s]
-    "acc_norm",                      # [m/s²]
-    "angle_proj",                    # unitless
-    "dot_VA",                        # [m²/s³]
-    "cross_VA_x", "cross_VA_y", "cross_VA_z",  # [m²/s³]
-    "theta",                         # [rad]
-    "gamma"                          # [rad]
-]
-
-# === Define the units for each feature ===
-# This is a list of units corresponding to the feature names.
-feature_units = [
-    "m", "m", "m",         # P1
-    "m", "m", "m",         # P1
-    "m/s", "m/s", "m/s",             # V1
-    "m/s²", "m/s²", "m/s²",          # A1
-    "unitless", "unitless", "unitless",  # V1_unit
-    "unitless", "unitless", "unitless",  # A1_unit
-    "unitless", "unitless", "unitless",  # unit_rel
-    "m",                             # tension
-    "m/s",                           # speed_norm
-    "m/s²",                          # acc_norm
-    "unitless",                      # angle_proj
-    "m²/s³",                         # dot_VA
-    "m²/s³", "m²/s³", "m²/s³",       # cross_VA
-    "rad",                           # theta
-    "rad"                            # gamma
-]
-
-constraints = {
-    "add": {"arity": 2},
-    "sub": {"arity": 2},
-    "mul": {"arity": 2},
-    "div": {"arity": 2},
-    "sqrt": {"arity": 1},
-    "tanh": {"arity": 1},
-    "square": {"arity": 1},
-    "sin": {"arity": 1},
-    "cos": {"arity": 1},
-    "log": {"arity": 1},
-    "exp": {"arity": 1}
-}
-
-# Map unit type → list of feature indices
-unit_to_indices = defaultdict(list)
-for i, u in enumerate(feature_units):
-    unit_to_indices[u].append(i)
-
 wandb.init(
     project="Catenary_Dynamics_Differential",
     entity="eather0056",
     name=f"{Run_Name}_{timestamp}",
     tags=["symbolic", "dynamics", "nonlinear"],
-    notes="Tanning for theta/gamma symbolic equations, 2 cable 6 dataset used load type concatenate, feature used P0, # [m] P1, # [m] V1, # [m/s] A1, # [m/s²] V1_unit, # unitless A1_unit, # unitless unit_rel, # unitless tension, # [m] speed_norm, # [m/s] acc_norm, # [m/s²] angle_proj, # unitless dot_VA, # [m²/s³] (proxy for work/power-type effects) cross_VA, # [m²/s³] theta, # [rad] gamma # [rad].",
+    notes="Tanning for theta/gamma symbolic equations, 2 cable 6 dataset used load type concatenate, feature used P1, V1, A1, unit_rel, tension, angle_proj, theta, gamma.",
     config={
         "model": "PySR",
         "task": "Differential Equation Discovery",
-        "niterations": 1000,
+        "niterations": 20,
         "binary_operators": ["+", "-", "*", "/"],
         # "complexity_of_operators": {"/": 5, "square": 2, "tanh": 3, "sin": 2, "cos": 2},
         "unary_operators": unary_ops,
@@ -133,20 +76,9 @@ common_params = dict(
     procs=config["procs"],
     maxsize=config["maxsize"],
     should_simplify=config["should_simplify"],
-    # feature_names=feature_names,
-    select_k_features=None,
-    constraints=constraints,
-    nested_constraints={
-        "add": [unit_to_indices["m/s"], unit_to_indices["m/s"]],
-        "sub": [unit_to_indices["rad"], unit_to_indices["rad"]],
-        "sin": [unit_to_indices["rad"]],
-        "cos": [unit_to_indices["rad"]],
-        "tanh": [unit_to_indices["unitless"]],
-        "sqrt": [unit_to_indices["unitless"]],
-        "log": [unit_to_indices["unitless"]],
-        "add": unit_to_indices["rad"],       # allow rad + rad
-        "add": unit_to_indices["m"],         # allow m + m
-    }
+    constraints={
+        "/": (-1, 1),  # Only allow division where the denominator is 1 term
+    },
 
 )
 
@@ -193,11 +125,8 @@ df_train = load_and_concat(train_files)
 df_test = load_and_concat(test_files)
 
 
-X_train = extract_features(df_train)
-# Filter features for unit consistency
-safe_indices = get_unit_safe_indices(feature_units)
-X_train = X_train[:, safe_indices]
-
+# X_train = extract_features(df_train)
+X_train = build_clean_features(df_train)
 y_dtheta_dt_train, y_dgamma_dt_train = compute_derivatives(df_train)
 
 scaler = StandardScaler()
@@ -219,7 +148,7 @@ os.makedirs(dgamma_out, exist_ok=True)
 os.chdir(dtheta_out)
 log_pysr_progress(model_dtheta_dt, "dTheta_dt", wandb.config["niterations"])
 print("Training model for dTheta/dt...")
-model_dtheta_dt.fit(X_train_scaled, y_dtheta_dt_train, feature_names=feature_names)
+model_dtheta_dt.fit(X_train_scaled, y_dtheta_dt_train)
 model_dtheta_dt._finished = True
 os.chdir(original_cwd)
 
@@ -227,7 +156,7 @@ os.chdir(original_cwd)
 os.chdir(dgamma_out)
 log_pysr_progress(model_dgamma_dt, "dGamma_dt", wandb.config["niterations"])
 print("Training model for dGamma/dt...")
-model_dgamma_dt.fit(X_train_scaled, y_dgamma_dt_train, feature_names=feature_names)
+model_dgamma_dt.fit(X_train_scaled, y_dgamma_dt_train)
 model_dgamma_dt._finished = True
 os.chdir(original_cwd)
 
@@ -247,8 +176,8 @@ model_dgamma_dt.equations_.to_csv(os.path.join(output_dir, f"dgamma_results.csv"
 joblib.dump(scaler, os.path.join(output_dir, f"scaler.pkl"))
 
 # === Save Predictions for Inspection ===
-X_test = extract_features(df_test)
-X_test = X_test[:, safe_indices]
+# X_test = extract_features(df_test)
+X_test = build_clean_features(df_test)
 X_scaled = scaler.transform(X_test)
 time = df_test["Time"].values
 
@@ -278,8 +207,6 @@ log_scatter_plot(gamma_true, gamma_est, "dGamma_dt", output_dir)
 eq_str = str(model_dtheta_dt.get_best()["equation"])
 used_features = Counter(re.findall(r"x\d+", eq_str))
 wandb.log({f"feature_usage_dtheta_dt/{k}": v for k, v in used_features.items()})
-safe_feature_names = [f"x{i} ({feature_units[i]})" for i in safe_indices]
-wandb.log({"used_features_unit_safe": safe_feature_names})
 
 wandb.log({
     "Number of Features": X_train.shape[1],
