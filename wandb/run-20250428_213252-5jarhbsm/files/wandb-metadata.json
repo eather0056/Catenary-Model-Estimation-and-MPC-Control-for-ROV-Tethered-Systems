@@ -1,0 +1,34 @@
+{
+  "os": "Linux-6.1.96-1.el9.elrepo.x86_64-x86_64-with-glibc2.34",
+  "python": "CPython 3.10.16",
+  "startedAt": "2025-04-28T19:32:52.567970Z",
+  "program": "/home/mundus/mdeowan698/Catenary_Dynamic/dynamic_eq_theta_cluster.py",
+  "codePath": "dynamic_eq_theta_cluster.py",
+  "git": {
+    "remote": "git@github.com:eather0056/Catenary-Model-Estimation-and-MPC-Control-for-ROV-Tethered-Systems.git",
+    "commit": "14e72aeabaf8674661d3da4573748344a24919af"
+  },
+  "email": "mdeather0056@gmail.com",
+  "root": "/home/mundus/mdeowan698/Catenary_Dynamic",
+  "host": "sms-cluster.lis-lab.fr",
+  "executable": "/mundus/mdeowan698/miniconda3/envs/cad/bin/python",
+  "codePathLocal": "dynamic_eq_theta_cluster.py",
+  "cpu_count": 12,
+  "cpu_count_logical": 12,
+  "disk": {
+    "/": {
+      "total": "34292629504",
+      "used": "27008950272"
+    }
+  },
+  "memory": {
+    "total": "33371115520"
+  },
+  "cpu": {
+    "count": 12,
+    "countLogical": 12
+  },
+  "slurm": {
+    "job_partition": "mundus"
+  }
+}

@@ -24,7 +24,7 @@ from collections import defaultdict
 
 # === Define The Run Name ===
 # This is the name of the run that will be used in W&B and the output directory.
-Run_Name = "C6_x_tg_FF_1k"
+Run_Name = "C6_y_tg_FF_20"
 
 # === Set the timestamp for the run ===
 # This will be used to create unique filenames for the output files.
@@ -33,21 +33,24 @@ os.environ["JULIA_DEBUG"] = "all"
 
 unary_ops = ["sin", "cos", "abs", "square", "tanh"]
 
+L = 3 # Length of the cable 
+cable_wet_weight = 1.373 # Wet weight of the cable
+
 wandb.init(
     project="Catenary_Dynamics_Differential",
     entity="eather0056",
     name=f"{Run_Name}_{timestamp}",
     tags=["symbolic", "dynamics", "nonlinear"],
-    notes="Tanning for theta/gamma symbolic equations, x all cable 6 dataset used load type concatenate, theta feature used: V1_y,A1_y,cross_v1_rel_norm,a1_perp_norm,tension,v1_norm and Gamma Feature used: v1_dot_unitrel,a1_dot_unitrel,v1_norm,a1_norm,tension,angle_proj_tanh.",
+    notes="Tanning for theta/gamma symbolic equations, y all cable 6 dataset used load type concatenate, theta feature used: V1_y,A1_y,cross_v1_rel_norm,a1_perp_norm,tension,v1_norm and Gamma Feature used: v1_dot_unitrel,a1_dot_unitrel,v1_norm,a1_norm,tension,angle_proj_tanh.",
     config={
         "model": "PySR",
         "task": "Differential Equation Discovery",
-        "niterations": 1000,
+        "niterations": 20,
         "binary_operators": ["+", "-", "*", "/"],
         # "complexity_of_operators": {"/": 5, "square": 2, "tanh": 3, "sin": 2, "cos": 2},
         "unary_operators": unary_ops,
         "batching": True,
-        "batch_size": 10000,
+        "batch_size": 5000,
         "random_state": 42,
         "maxsize": 30,
         "procs": 0,
@@ -95,23 +98,23 @@ os.makedirs(output_dir, exist_ok=True)
 
 # === Load and Combine Training Datasets ===
 train_files = [
-    "Data/L_dynamique6x100dis2_0033.csv",  
-    "Data/L_dynamique6x100dis2_0034.csv",  
-    "Data/L_dynamique6x100dis2_0035.csv",  
-    "Data/L_dynamique6x200dis2_0030.csv",  
-    "Data/L_dynamique6x200dis2_0031.csv",  
-    "Data/L_dynamique6x200dis2_0032.csv",  
+    # "Data/L_dynamique6x100dis2_0033.csv",  
+    # "Data/L_dynamique6x100dis2_0034.csv",  
+    # "Data/L_dynamique6x100dis2_0035.csv",  
+    # "Data/L_dynamique6x200dis2_0030.csv",  
+    # "Data/L_dynamique6x200dis2_0031.csv",  
+    # "Data/L_dynamique6x200dis2_0032.csv",  
     # "Data/L_dynamique6y100dis1_0018.csv",  
     # "Data/L_dynamique6y100dis1_0019.csv",  
     # "Data/L_dynamique6y100dis1_0020.csv",  
     # "Data/L_dynamique6y100dis2_0021.csv",  
     # "Data/L_dynamique6y100dis2_0022.csv",  
-    # "Data/L_dynamique6y100dis2_0023.csv",  
-    # "Data/L_dynamique6y200dis1_0025.csv",  
-    # "Data/L_dynamique6y200dis1_0026.csv",  
-    # "Data/L_dynamique6y200dis2_0027.csv",  
-    # "Data/L_dynamique6y200dis2_0028.csv",  
-    # "Data/L_dynamique6y200dis2_0029.csv"  
+    "Data/L_dynamique6y100dis2_0023.csv",  
+    "Data/L_dynamique6y200dis1_0025.csv",  
+    "Data/L_dynamique6y200dis1_0026.csv",  
+    "Data/L_dynamique6y200dis2_0027.csv",  
+    "Data/L_dynamique6y200dis2_0028.csv",  
+    "Data/L_dynamique6y200dis2_0029.csv"  
 ]
 
 # === Test on New Dataset ===
@@ -137,8 +140,8 @@ df_test = load_and_concat(test_files)
 # X_train_scaled = scaler.fit_transform(X_train)
 
 # Step 1: Build theta and gamma features separately
-X_train_theta = build_theta_features(df_train)    # for theta
-X_train_gamma = build_gamma_features(df_train)    # for gamma
+X_train_theta = build_theta_features(df_train, L, cable_wet_weight)    # for theta
+X_train_gamma = build_gamma_features(df_train, L, cable_wet_weight)    # for gamma
 
 # Step 2: Compute targets
 y_dtheta_dt_train, y_dgamma_dt_train = compute_derivatives(df_train)
@@ -192,13 +195,14 @@ model_dtheta_dt.equations_.to_csv(os.path.join(output_dir, f"dtheta_results.csv"
 model_dgamma_dt.equations_.to_csv(os.path.join(output_dir, f"dgamma_results.csv"), index=False)
 
 # === Save Scaler ===
-joblib.dump(scaler, os.path.join(output_dir, f"scaler.pkl"))
+joblib.dump(scaler_theta, os.path.join(output_dir, f"scaler_theta.pkl"))
+joblib.dump(scaler_gamma, os.path.join(output_dir, f"scaler_gamma.pkl"))
+
 
 # === Save Predictions for Inspection ===
 # X_test = extract_features(df_test)
-X_test_theta = build_theta_features(df_test)
-X_test_gamma = build_gamma_features(df_test)
-# X_test = np.hstack([X_test_theta, X_test_gamma])
+X_test_theta = build_theta_features(df_test, L, cable_wet_weight)
+X_test_gamma = build_gamma_features(df_test, L, cable_wet_weight)
 # X_scaled = scaler.transform(X_test)
 
 X_test_theta_scaled = scaler_theta.fit_transform(X_test_theta)
@@ -229,13 +233,18 @@ gamma_error = gamma_true - gamma_est
 log_scatter_plot(theta_true, theta_est, "dTheta_dt", output_dir)
 log_scatter_plot(gamma_true, gamma_est, "dGamma_dt", output_dir)
 
+log_convergence_plot(model_dtheta_dt, "dTheta_dt", output_dir)
+log_convergence_plot(model_dgamma_dt, "dGamma_dt", output_dir)
+
 eq_str = str(model_dtheta_dt.get_best()["equation"])
 used_features = Counter(re.findall(r"x\d+", eq_str))
 wandb.log({f"feature_usage_dtheta_dt/{k}": v for k, v in used_features.items()})
 
 wandb.log({
-    "Number of Features": X_train.shape[1],
-    "Number of Training Samples": len(X_train),
+    "Number of Features For Theta": X_train_theta.shape[1],
+    "Number of Training Samples for theta": len(X_train_theta),
+    "Number of Features for Gamma": X_train_gamma.shape[1],
+    "Number of Training Samples for Gamma": len(X_train_gamma),
     "eq_dtheta_dt_final": str(model_dtheta_dt.get_best()),
     "eq_dgamma_dt_final": str(model_dgamma_dt.get_best()),
     "r2_score_dtheta_dt": r2_score(theta_true, theta_est),
@@ -256,8 +265,6 @@ wandb.log({
     "dGamma_dt_error_median": np.median(gamma_error),
 })
 
-log_convergence_plot(model_dtheta_dt, "dTheta_dt", output_dir)
-log_convergence_plot(model_dgamma_dt, "dGamma_dt", output_dir)
 
 # === Save to W&B as Artifact ===
 artifact = wandb.Artifact(f"dynamics_models_{Run_Name}", type="model")

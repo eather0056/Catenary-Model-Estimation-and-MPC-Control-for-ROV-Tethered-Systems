@@ -1,0 +1,7 @@
+complexity                                                       6
+loss                                                      0.005911
+score                                                     0.067723
+equation                       (square(-0.004549538) * (x3 - x11))
+sympy_format       -2.0698296013444e-5*x11 + 2.0698296013444e-5*x3
+lambda_format    PySRFunction(X=>-2.0698296013444e-5*x11 + 2.06...
+Name: 5, dtype: object

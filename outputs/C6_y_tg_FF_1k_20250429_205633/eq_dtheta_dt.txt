@@ -1,0 +1,7 @@
+complexity                                                   7
+loss                                                  0.004115
+score                                                 0.113146
+equation               (square(square(x4 * -0.09871821)) * x0)
+sympy_format                      9.49705794506407e-5*x0*x4**4
+lambda_format    PySRFunction(X=>9.49705794506407e-5*x0*x4**4)
+Name: 6, dtype: object

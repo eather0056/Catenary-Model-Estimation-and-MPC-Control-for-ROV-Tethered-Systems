@@ -1,0 +1,7 @@
+complexity                             3
+loss                            0.006234
+score                           0.039022
+equation                      (x1 * x10)
+sympy_format                      x1*x10
+lambda_format    PySRFunction(X=>x1*x10)
+Name: 2, dtype: object

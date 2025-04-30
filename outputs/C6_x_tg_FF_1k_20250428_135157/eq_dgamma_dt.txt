@@ -1,0 +1,7 @@
+complexity                                      3
+loss                                      0.00329
+score                                    0.237919
+equation                      (x7 * 3.2844187e-7)
+sympy_format                      3.2844187e-7*x7
+lambda_format    PySRFunction(X=>3.2844187e-7*x7)
+Name: 1, dtype: object
