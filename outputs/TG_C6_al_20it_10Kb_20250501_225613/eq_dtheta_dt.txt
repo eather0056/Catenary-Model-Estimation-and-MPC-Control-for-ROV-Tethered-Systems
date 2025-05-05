@@ -1,0 +1,7 @@
+complexity                                          5
+loss                                         0.002447
+score                                        0.050886
+equation                 square(neg(gamma_angle / l))
+sympy_format                      gamma_angle**2/l**2
+lambda_format    PySRFunction(X=>gamma_angle**2/l**2)
+Name: 3, dtype: object

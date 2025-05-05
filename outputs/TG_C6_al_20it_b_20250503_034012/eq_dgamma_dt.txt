@@ -1,0 +1,7 @@
+complexity                                    3
+loss                                   0.935672
+score                                  0.033245
+equation                      (v_sway * torque)
+sympy_format                      torque*v_sway
+lambda_format    PySRFunction(X=>torque*v_sway)
+Name: 1, dtype: object

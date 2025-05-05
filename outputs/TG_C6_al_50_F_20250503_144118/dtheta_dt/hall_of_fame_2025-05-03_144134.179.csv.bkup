@@ -1,0 +1,6 @@
+Complexity,Loss,Equation
+1,0.9999212,"torque"
+3,0.67473483,"(0.007911527 * v_surge_l)"
+5,0.67411256,"(0.007911527 * (v_surge_l - -0.2736148))"
+8,0.6728661,"(0.007911527 * (v_surge_l - sin(neg(cos(0.15732676)))))"
+13,0.6502421,"((cos(T_l) - neg(v_surge)) * square(square(sin(cos(T_l))) * 0.11812295))"

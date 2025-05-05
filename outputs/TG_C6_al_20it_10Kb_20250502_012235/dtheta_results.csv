@@ -1,0 +1,7 @@
+complexity, loss        , score                , equation                         , sympy_format            , lambda_format
+         1, 0.002679396 , 0.0                  , 0.0018322297                     , 0.00183222970000000     , PySRFunction(X=>0.00183222970000000)
+         3, 0.0026634918, 0.0029767136369109755, square(square(gamma_angle))      , gamma_angle**4          , PySRFunction(X=>gamma_angle**4)
+         4, 0.0022427782, 0.17192260348699878  , (square(A) * v_surge)            , A**2*v_surge            , PySRFunction(X=>A**2*v_surge)
+         6, 0.0017997462, 0.11003485513329524  , (square(A + A) * v_surge)        , 4*A**2*v_surge          , PySRFunction(X=>4*A**2*v_surge)
+         7, 0.0017991932, 0.0003073127623944463, sin(square(A + A) * v_surge)     , sin(4*A**2*v_surge)     , PySRFunction(X=>sin(4*A**2*v_surge))
+         8, 0.001799156 , 2.067614782979937e-05, sin(square(sin(A + A)) * v_surge), sin(v_surge*sin(2*A)**2), PySRFunction(X=>sin(v_surge*sin(2*A)**2))

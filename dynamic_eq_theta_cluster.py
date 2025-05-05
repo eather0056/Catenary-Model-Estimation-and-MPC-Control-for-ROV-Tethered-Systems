@@ -24,41 +24,57 @@ from collections import defaultdict
 
 # === Define The Run Name ===
 # This is the name of the run that will be used in W&B and the output directory.
-Run_Name = "C6_y_tg_FF_20"
+Run_Name = "TG_C6_al_50_F"
 
 # === Set the timestamp for the run ===
 # This will be used to create unique filenames for the output files.
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 os.environ["JULIA_DEBUG"] = "all"
 
-unary_ops = ["sin", "cos", "abs", "square", "tanh"]
+# ===== Physics-Compliant Operators =====
+unary_ops = [
+    "square",    # Quadratic drag terms (x²)
+    # "tanh",      # Angle saturation
+    "neg",       # Sign inversion (implicit in subtraction)
+    "cos",      # Angle projection
+    "sin",      # Angle projection
+    # "abs",       # Absolute value for tension
+    # "cube",      # Cubic terms (x³)
+]
 
-L = 3 # Length of the cable 
-cable_wet_weight = 1.373 # Wet weight of the cable
+# Cable parameters from experimental setup (Table I for cable 6)
+L = 3.0  # [m]
+cable_wet_weight = 1.521  # [N] (From Table I, cable 6: wet weight=1.521N)
 
 wandb.init(
     project="Catenary_Dynamics_Differential",
     entity="eather0056",
     name=f"{Run_Name}_{timestamp}",
-    tags=["symbolic", "dynamics", "nonlinear"],
-    notes="Tanning for theta/gamma symbolic equations, y all cable 6 dataset used load type concatenate, theta feature used: V1_y,A1_y,cross_v1_rel_norm,a1_perp_norm,tension,v1_norm and Gamma Feature used: v1_dot_unitrel,a1_dot_unitrel,v1_norm,a1_norm,tension,angle_proj_tanh.",
+    tags=["symbolic", "dynamics", "nonlinear", "hydrodynamics"],
+    notes="Augmented catenary dynamics discovery with physics-informed operator constraints. Features: theta (v_surge, v_sway², tension), gamma (v_sway, v_cross, delta_H). Cable 6 dataset.",
     config={
         "model": "PySR",
-        "task": "Differential Equation Discovery",
-        "niterations": 20,
-        "binary_operators": ["+", "-", "*", "/"],
-        # "complexity_of_operators": {"/": 5, "square": 2, "tanh": 3, "sin": 2, "cos": 2},
+        "task": "Damped Catenary Dynamics",
+        "niterations": 50,
+        "binary_operators": ["+", "-", "*", "/"],  # Protected division
         "unary_operators": unary_ops,
-        "batching": True,
-        "batch_size": 5000,
-        "random_state": 42,
-        "maxsize": 30,
-        "procs": 0,
-        "verbosity": 1,
         "loss": "loss(x, y) = (x - y)^2 + 0.01 * abs(x)",
+        "constraints": {
+            "/": (3, 2),  # Max depth 3, denominator terms ≤2
+            "exp": 1,      # Max 1 exponential per expression
+        },
+        "nested_constraints": {
+            "tanh": {"tanh": 0},  # No nested tanh
+            "exp": {"exp": 0}      # No nested exponentials
+        },
+        "batching": True,
+        "batch_size": 10000,
+        "random_state": 42,
+        "maxsize": 25,
+        "procs": 0,
+        "verbosity": 2,
         "deterministic": True,
-        "model_selection": "best",
-        "should_simplify": False,
+        "model_selection": "accuracy",
     }
 )
 
@@ -68,23 +84,16 @@ common_params = dict(
     niterations=config["niterations"],
     binary_operators=config["binary_operators"],
     unary_operators=config["unary_operators"],
-    # complexity_of_operators=config["complexity_of_operators"],
-    model_selection=config["model_selection"],
     loss=config["loss"],
-    verbosity=config["verbosity"],
+    # constraints=config["constraints"],
+    # nested_constraints=config["nested_constraints"],
     batching=config["batching"],
     batch_size=config["batch_size"],
     random_state=config["random_state"],
     deterministic=config["deterministic"],
     procs=config["procs"],
     maxsize=config["maxsize"],
-    should_simplify=config["should_simplify"],
-    constraints={
-        "/": (-1, 1),  # Only allow division where the denominator is 1 term
-    },
-
-)
-
+    )
 
 # === Set up output directory ===
 # This will be used to save the output files and models.
@@ -98,17 +107,17 @@ os.makedirs(output_dir, exist_ok=True)
 
 # === Load and Combine Training Datasets ===
 train_files = [
-    # "Data/L_dynamique6x100dis2_0033.csv",  
-    # "Data/L_dynamique6x100dis2_0034.csv",  
-    # "Data/L_dynamique6x100dis2_0035.csv",  
-    # "Data/L_dynamique6x200dis2_0030.csv",  
-    # "Data/L_dynamique6x200dis2_0031.csv",  
-    # "Data/L_dynamique6x200dis2_0032.csv",  
-    # "Data/L_dynamique6y100dis1_0018.csv",  
-    # "Data/L_dynamique6y100dis1_0019.csv",  
-    # "Data/L_dynamique6y100dis1_0020.csv",  
-    # "Data/L_dynamique6y100dis2_0021.csv",  
-    # "Data/L_dynamique6y100dis2_0022.csv",  
+    "Data/L_dynamique6x100dis2_0033.csv",  
+    "Data/L_dynamique6x100dis2_0034.csv",  
+    "Data/L_dynamique6x100dis2_0035.csv",  
+    "Data/L_dynamique6x200dis2_0030.csv",  
+    "Data/L_dynamique6x200dis2_0031.csv",  
+    "Data/L_dynamique6x200dis2_0032.csv",  
+    "Data/L_dynamique6y100dis1_0018.csv",  
+    "Data/L_dynamique6y100dis1_0019.csv",  
+    "Data/L_dynamique6y100dis1_0020.csv",  
+    "Data/L_dynamique6y100dis2_0021.csv",  
+    "Data/L_dynamique6y100dis2_0022.csv",  
     "Data/L_dynamique6y100dis2_0023.csv",  
     "Data/L_dynamique6y200dis1_0025.csv",  
     "Data/L_dynamique6y200dis1_0026.csv",  
@@ -128,23 +137,19 @@ df_train = load_and_concat(train_files)
 df_test = load_and_concat(test_files)
 
 
-# X_train = extract_features(df_train)
-# X_train_theta = build_theta_features(df_train)
-# X_train_gamma = build_gamma_features(df_train)
-# X_train = np.hstack([X_train_theta, X_train_gamma])
-
-# y_dtheta_dt_train, y_dgamma_dt_train = compute_derivatives(df_train)
-
-
-# scaler = StandardScaler()
-# X_train_scaled = scaler.fit_transform(X_train)
-
 # Step 1: Build theta and gamma features separately
-X_train_theta = build_theta_features(df_train, L, cable_wet_weight)    # for theta
-X_train_gamma = build_gamma_features(df_train, L, cable_wet_weight)    # for gamma
+X_train_theta = build_theta_features_valid(df_train, L, cable_wet_weight)    # for theta
+X_train_gamma = build_gamma_features_valid(df_train, L, cable_wet_weight)    # for gamma
 
 # Step 2: Compute targets
-y_dtheta_dt_train, y_dgamma_dt_train = compute_derivatives(df_train)
+theta_dot, gamma_dot = compute_derivatives(df_train)
+
+# === Step 1: Rescale gamma_dot and theta_dot ===
+gamma_mean, gamma_std = gamma_dot.mean(), gamma_dot.std()
+theta_mean, theta_std = theta_dot.mean(), theta_dot.std()
+
+y_dgamma_dt_train = (gamma_dot - gamma_mean) / gamma_std
+y_dtheta_dt_train = (theta_dot - theta_mean) / theta_std
 
 # Step 3: Scale them separately
 scaler_theta = StandardScaler()
@@ -170,7 +175,22 @@ os.makedirs(dgamma_out, exist_ok=True)
 os.chdir(dtheta_out)
 log_pysr_progress(model_dtheta_dt, "dTheta_dt", wandb.config["niterations"])
 print("Training model for dTheta/dt...")
-model_dtheta_dt.fit(X_train_theta, y_dtheta_dt_train)
+model_dtheta_dt.fit(
+    X_train_theta,
+    y_dtheta_dt_train,
+    variable_names=[
+        "theta_v_surge_l",      # [rad/s]
+        "v_surge_l",            # [1/s]
+        "theta_v_surge",        # [rad·m/s]
+        "v_surge",              # [m/s]
+        "v_surge_sq_l",         # [m/s²]
+        "T_l",                  # [kg/s²]
+        "sin_theta",            # [dimensionless]
+        "delta_H_l",            # [dimensionless]
+        "torque" ,            # [rad/s²]
+    ]
+)
+
 model_dtheta_dt._finished = True
 os.chdir(original_cwd)
 
@@ -178,7 +198,20 @@ os.chdir(original_cwd)
 os.chdir(dgamma_out)
 log_pysr_progress(model_dgamma_dt, "dGamma_dt", wandb.config["niterations"])
 print("Training model for dGamma/dt...")
-model_dgamma_dt.fit(X_train_gamma, y_dgamma_dt_train)
+model_dgamma_dt.fit(
+    X_train_gamma,
+    y_dgamma_dt_train,
+    variable_names=[
+        "gamma_v_sway_l",      # [rad/s]
+        "v_sway_l",            # [1/s]
+        "gamma_v_sway",        # [rad·m/s]
+        "v_sway",              # [m/s]
+        "v_sway_sq_l",         # [m/s²]
+        "T_l",                  # [kg/s²]
+        "sin_gamma",            # [dimensionless]
+        "torque" ,            # [rad/s²]
+    ]
+)
 model_dgamma_dt._finished = True
 os.chdir(original_cwd)
 
@@ -201,8 +234,8 @@ joblib.dump(scaler_gamma, os.path.join(output_dir, f"scaler_gamma.pkl"))
 
 # === Save Predictions for Inspection ===
 # X_test = extract_features(df_test)
-X_test_theta = build_theta_features(df_test, L, cable_wet_weight)
-X_test_gamma = build_gamma_features(df_test, L, cable_wet_weight)
+X_test_theta = build_theta_features_valid(df_test, L, cable_wet_weight)
+X_test_gamma = build_gamma_features_valid(df_test, L, cable_wet_weight)
 # X_scaled = scaler.transform(X_test)
 
 X_test_theta_scaled = scaler_theta.fit_transform(X_test_theta)
@@ -211,8 +244,8 @@ X_test_gamma_scaled = scaler_gamma.fit_transform(X_test_gamma)
 time = df_test["Time"].values
 
 # === Predict Derivatives ===
-dtheta_pred = model_dtheta_dt.predict(X_test_theta_scaled)
-dgamma_pred = model_dgamma_dt.predict(X_test_gamma_scaled)
+dtheta_pred = model_dtheta_dt.predict(X_test_theta_scaled) * theta_std + theta_mean
+dgamma_pred = model_dgamma_dt.predict(X_test_gamma_scaled) * gamma_std + gamma_mean
 
 # === Integrate to Estimate Theta and Gamma ===
 theta_est = np.zeros_like(dtheta_pred)

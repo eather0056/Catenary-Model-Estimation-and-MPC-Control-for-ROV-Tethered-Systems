@@ -1,0 +1,6 @@
+complexity, loss      , score                 , equation                                                                , sympy_format                                            , lambda_format
+         1, 0.9999212 , 0.0                   , torque                                                                  , torque                                                  , PySRFunction(X=>torque)
+         3, 0.67473483, 0.19667835331638098   , (0.007911527 * v_surge_l)                                               , 0.007911527*v_surge_l                                   , PySRFunction(X=>0.007911527*v_surge_l)
+         5, 0.67411256, 0.00046133465413449823, (0.007911527 * (v_surge_l - -0.2736148))                                , 0.007911527*v_surge_l + 0.0021647108777996              , PySRFunction(X=>0.007911527*v_surge_l + 0.0021647108777996)
+         8, 0.6728661 , 0.0006169166559223816 , (0.007911527 * (v_surge_l - sin(neg(cos(0.15732676)))))                 , 0.007911527*v_surge_l + 0.00660402103827526             , PySRFunction(X=>0.007911527*v_surge_l + 0.00660402103827526)
+        13, 0.6502421 , 0.006840318977378271  , ((cos(T_l) - neg(v_surge)) * square(square(sin(cos(T_l))) * 0.11812295)), 0.0139530313167025*(v_surge + cos(T_l))*sin(cos(T_l))**4, PySRFunction(X=>0.0139530313167025*(v_surge + cos(T_l))*sin(cos(T_l))**4)

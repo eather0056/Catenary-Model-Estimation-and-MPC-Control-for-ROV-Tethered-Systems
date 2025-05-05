@@ -192,74 +192,74 @@ def extract_features(df):
 
 import numpy as np
 
-# def build_theta_features(df):
-#     P0 = df[["rod_end X", "rod_end Y", "rod_end Z"]].values / 1000
-#     P1 = df[["robot_cable_attach_point X", "robot_cable_attach_point Y", "robot_cable_attach_point Z"]].values / 1000
-#     V1 = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values
-#     time = df["Time"].values
+def build_clean_features(df):
+    P0 = df[["rod_end X", "rod_end Y", "rod_end Z"]].values / 1000
+    P1 = df[["robot_cable_attach_point X", "robot_cable_attach_point Y", "robot_cable_attach_point Z"]].values / 1000
+    V1 = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values
+    time = df["Time"].values
 
-#     acc_x = np.gradient(df["rob_cor_speed X"].values, time)
-#     acc_y = np.gradient(df["rob_cor_speed Y"].values, time)
-#     acc_z = np.gradient(df["rob_cor_speed Z"].values, time)
-#     A1 = np.stack([acc_x, acc_y, acc_z], axis=1)
+    acc_x = np.gradient(df["rob_cor_speed X"].values, time)
+    acc_y = np.gradient(df["rob_cor_speed Y"].values, time)
+    acc_z = np.gradient(df["rob_cor_speed Z"].values, time)
+    A1 = np.stack([acc_x, acc_y, acc_z], axis=1)
 
-#     rel_vec = P1 - P0
-#     unit_rel = rel_vec / (np.linalg.norm(rel_vec, axis=1, keepdims=True) + 1e-8)
-#     tension = np.clip(np.linalg.norm(rel_vec, axis=1, keepdims=True), 1e-5, 10)
+    rel_vec = P1 - P0
+    unit_rel = rel_vec / (np.linalg.norm(rel_vec, axis=1, keepdims=True) + 1e-8)
+    tension = np.clip(np.linalg.norm(rel_vec, axis=1, keepdims=True), 1e-5, 10)
 
-#     # Projections
-#     v1_dot_unitrel = np.sum(V1 * unit_rel, axis=1, keepdims=True)
-#     a1_dot_unitrel = np.sum(A1 * unit_rel, axis=1, keepdims=True)
+    # Projections
+    v1_dot_unitrel = np.sum(V1 * unit_rel, axis=1, keepdims=True)
+    a1_dot_unitrel = np.sum(A1 * unit_rel, axis=1, keepdims=True)
 
-#     # Cross product norms
-#     cross_v1_rel = np.cross(V1, unit_rel)
-#     cross_v1_rel_norm = np.linalg.norm(cross_v1_rel, axis=1, keepdims=True)
+    # Cross product norms
+    cross_v1_rel = np.cross(V1, unit_rel)
+    cross_v1_rel_norm = np.linalg.norm(cross_v1_rel, axis=1, keepdims=True)
 
-#     # Sideways acceleration
-#     a1_parallel = (np.sum(A1 * unit_rel, axis=1, keepdims=True)) * unit_rel
-#     a1_perp = A1 - a1_parallel
-#     a1_perp_norm = np.linalg.norm(a1_perp, axis=1, keepdims=True)
+    # Sideways acceleration
+    a1_parallel = (np.sum(A1 * unit_rel, axis=1, keepdims=True)) * unit_rel
+    a1_perp = A1 - a1_parallel
+    a1_perp_norm = np.linalg.norm(a1_perp, axis=1, keepdims=True)
 
-#     # Norms
-#     v1_norm = np.linalg.norm(V1, axis=1, keepdims=True)
-#     a1_norm = np.linalg.norm(A1, axis=1, keepdims=True)
+    # Norms
+    v1_norm = np.linalg.norm(V1, axis=1, keepdims=True)
+    a1_norm = np.linalg.norm(A1, axis=1, keepdims=True)
 
-#     # Ratios
-#     acc_vel_ratio = a1_norm / (v1_norm + 1e-8)
+    # Ratios
+    acc_vel_ratio = a1_norm / (v1_norm + 1e-8)
 
-#     # Energetic terms
-#     v1_norm_sq = v1_norm ** 2
-#     a1_norm_sq = a1_norm ** 2
+    # Energetic terms
+    v1_norm_sq = v1_norm ** 2
+    a1_norm_sq = a1_norm ** 2
 
-#     # Angle projections (already bounded)
-#     dot_product = np.sum(V1 * unit_rel, axis=1, keepdims=True)
-#     angle_proj = np.clip(dot_product / (np.linalg.norm(V1, axis=1, keepdims=True) + 1e-8), -1, 1)
-#     angle_proj_tanh = np.tanh(angle_proj)
+    # Angle projections (already bounded)
+    dot_product = np.sum(V1 * unit_rel, axis=1, keepdims=True)
+    angle_proj = np.clip(dot_product / (np.linalg.norm(V1, axis=1, keepdims=True) + 1e-8), -1, 1)
+    angle_proj_tanh = np.tanh(angle_proj)
 
-#     # New Lateral Components
-#     V1_y = V1[:,1].reshape(-1,1)     # Y component of Velocity
-#     A1_y = A1[:,1].reshape(-1,1)     # Y component of Acceleration
+    # New Lateral Components
+    V1_y = V1[:,1].reshape(-1,1)     # Y component of Velocity
+    A1_y = A1[:,1].reshape(-1,1)     # Y component of Acceleration
 
-#     # Optional: You could also add V1_x, V1_z, A1_x, A1_z if needed later.
+    # Optional: You could also add V1_x, V1_z, A1_x, A1_z if needed later.
 
-#     # ===== Stack all final features =====
-#     features = np.hstack([
-#         v1_dot_unitrel,       # (m/s)
-#         a1_dot_unitrel,       # (m/s²)
-#         cross_v1_rel_norm,    # (m²/s)
-#         a1_perp_norm,         # (m/s²)
-#         v1_norm,              # (m/s)
-#         a1_norm,              # (m/s²)
-#         acc_vel_ratio,        # (s^-1)
-#         v1_norm_sq,           # (m²/s²)
-#         a1_norm_sq,           # (m²/s^4)
-#         tension,              # (m)
-#         angle_proj_tanh,      # (dimensionless)
-#         V1_y,                 # (m/s) 
-#         A1_y,                 # (m/s²)
-#     ])
+    # ===== Stack all final features =====
+    features = np.hstack([
+        v1_dot_unitrel,       # (m/s)
+        a1_dot_unitrel,       # (m/s²)
+        cross_v1_rel_norm,    # (m²/s)
+        a1_perp_norm,         # (m/s²)
+        v1_norm,              # (m/s)
+        a1_norm,              # (m/s²)
+        acc_vel_ratio,        # (s^-1)
+        v1_norm_sq,           # (m²/s²)
+        a1_norm_sq,           # (m²/s^4)
+        tension,              # (m)
+        angle_proj_tanh,      # (dimensionless)
+        V1_y,                 # (m/s) 
+        A1_y,                 # (m/s²)
+    ])
 
-#     return features
+    return features
 
 
 def build_theta_features(df, L, cable_wet_weight):
@@ -269,6 +269,14 @@ def build_theta_features(df, L, cable_wet_weight):
     V1 = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values
     theta = df["Theta"].values.reshape(-1,1)  # Current θ angle
     gamma = df["Gamma"].values.reshape(-1,1)  # Current γ angle
+    time = df["Time"].values
+
+    acc_x = np.gradient(df["rob_cor_speed X"].values, time)
+    acc_y = np.gradient(df["rob_cor_speed Y"].values, time)
+    acc_z = np.gradient(df["rob_cor_speed Z"].values, time)
+    A1 = np.stack([acc_x, acc_y, acc_z], axis=1)
+
+
 
     # ===== Kinematics =====
     rel_vec = P1 - P0
@@ -294,20 +302,41 @@ def build_theta_features(df, L, cable_wet_weight):
     T = (w_per_unit_length * l) / (2 * np.sinh(C_values.reshape(-1,1) * l/2))
     T = np.where(np.isnan(T), w_per_unit_length * l / 2, T)  # Static fallback
 
+    # Add physics parameters as constants
+    w_wet = cable_wet_weight * np.ones_like(l)  # [N]
+    rho = 1000 * np.ones_like(l)  # Water density [kg/m³]
+    C_d = 1.2 * np.ones_like(l)   # Drag coefficient
+    A = 0.01 * np.ones_like(l)    # Cross-sectional area [m²]
+
+    # Angle projections (already bounded)
+    dot_product = np.sum(V1 * unit_rel, axis=1, keepdims=True)
+    angle_proj = np.clip(dot_product / (np.linalg.norm(V1, axis=1, keepdims=True) + 1e-8), -1, 1)
+    angle_proj_tanh = np.tanh(angle_proj)
+
+    # Sideways acceleration
+    a1_parallel = (np.sum(A1 * unit_rel, axis=1, keepdims=True)) * unit_rel
+    a1_perp = A1 - a1_parallel
+    a1_perp_norm = np.linalg.norm(a1_perp, axis=1, keepdims=True)
+
+    # New Lateral Components
+    A1_y = A1[:,1].reshape(-1,1)     # Y component of Acceleration
+
     # ===== Feature Stacking =====
     features = np.hstack([
         theta,                # [rad]
-        gamma,                # [rad]  
         v_surge,              # [m/s]
         v_sway,               # [m/s]
-        v_surge_sq,           # [m²/s²]
-        v_sway_sq,            # [m²/s²]
-        theta * v_surge,      # [rad·m/s]
-        gamma * v_sway,       # [rad·m/s]
+        # v_surge_sq,           # [m²/s²]
+        # v_sway_sq,            # [m²/s²]
         l,                    # [m]
         delta_H,              # [m]
-        T                     # [N] (now correct units)
+        T,                     # [N] (now correct units)
+        # w_wet, rho, C_d, A,  # [N], [kg/m³], [dimensionless], [m²]
+        angle_proj_tanh,      # [dimensionless]
+        A1_y,                 # [m/s²]
+        a1_perp_norm         # [m/s²]
     ])
+
     return features
 
 def build_gamma_features(df, L, cable_wet_weight):
@@ -317,6 +346,12 @@ def build_gamma_features(df, L, cable_wet_weight):
     V1 = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values
     gamma = df["Gamma"].values.reshape(-1,1)  # Current γ angle
     theta = df["Theta"].values.reshape(-1,1)  # Current θ angle
+    time = df["Time"].values
+
+    acc_x = np.gradient(df["rob_cor_speed X"].values, time)
+    acc_y = np.gradient(df["rob_cor_speed Y"].values, time)
+    acc_z = np.gradient(df["rob_cor_speed Z"].values, time)
+    A1 = np.stack([acc_x, acc_y, acc_z], axis=1)
 
     # ===== Kinematic Decomposition =====
     rel_vec = P1 - P0
@@ -340,19 +375,39 @@ def build_gamma_features(df, L, cable_wet_weight):
     theta_v_sway = theta * v_sway          # Cross-coupling
     v_cross_term = v_surge * v_sway        # Surge-sway interaction
 
+    # Add physics parameters as constants
+    w_wet = cable_wet_weight * np.ones_like(l)  # [N]
+    rho = 1000 * np.ones_like(l)  # Water density [kg/m³]
+    C_d = 1.2 * np.ones_like(l)   # Drag coefficient
+    A = 0.01 * np.ones_like(l)    # Cross-sectional area [m²]
+
+    # Angle projections (already bounded)
+    dot_product = np.sum(V1 * unit_rel, axis=1, keepdims=True)
+    angle_proj = np.clip(dot_product / (np.linalg.norm(V1, axis=1, keepdims=True) + 1e-8), -1, 1)
+    angle_proj_tanh = np.tanh(angle_proj)
+
+    # Sideways acceleration
+    a1_parallel = (np.sum(A1 * unit_rel, axis=1, keepdims=True)) * unit_rel
+    a1_perp = A1 - a1_parallel
+    a1_perp_norm = np.linalg.norm(a1_perp, axis=1, keepdims=True)
+
+    # New Lateral Components
+    A1_y = A1[:,1].reshape(-1,1)     # Y component of Acceleration
+
     # ===== Feature Stacking =====
     features = np.hstack([
         gamma,                # Current angle γ (rad)
-        theta,                # Cross-coupling with θ (rad)  
         v_sway,               # Sway velocity (m/s)
         v_surge,              # Surge velocity (m/s)
-        v_sway_sq,            # Quadratic sway term (m²/s²)
-        gamma_v_sway,         # γ⋅v_sway interaction
-        theta_v_sway,         # θ⋅v_sway cross-coupling
-        v_cross_term,         # v_surge⋅v_sway interaction
+        # v_sway_sq,            # Quadratic sway term (m²/s²)
         l,                    # Horizontal span (m)
         delta_H,              # Vertical elevation (m)
-        T                     # True tension (N) from catenary
+        T,                     # True tension (N) from catenary
+        # w_wet, rho, C_d, A,   # [N], [kg/m³], [dimensionless], [m²]
+        angle_proj_tanh,      # [dimensionless]
+        A1_y,                 # [m/s²]
+        a1_perp_norm         # [m/s²]
+
     ])
     
     return features
@@ -360,18 +415,18 @@ def build_gamma_features(df, L, cable_wet_weight):
 
 def solve_catenary(l, delta_H, L):
     """Vectorized solver for catenary parameter C"""
-    from scipy.optimize import root_scalar
-    def _scalar_solver(args):
-        l_i, delta_H_i, L_i = args
+
+    def _scalar_solver(l_i, delta_H_i, L_i):
         def f(C):
-            return C**2 * (L_i**2 - delta_H_i**2) - 4*(np.sinh(0.5*l_i*C))**2
+            return C**2 * (L_i**2 - delta_H_i**2) - 4*(np.sinh(0.5 * l_i * C))**2
         try:
             sol = root_scalar(f, bracket=[1e-6, 10], method='brentq')
             return sol.root
         except:
             return np.nan
-    return np.vectorize(_scalar_solver)(np.stack([l, delta_H, L*np.ones_like(l)], axis=1))
 
+    # Vectorize the solver over inputs
+    return np.vectorize(_scalar_solver)(l, delta_H, L)
 
 # def build_gamma_features(df):
 #     P0 = df[["rod_end X", "rod_end Y", "rod_end Z"]].values / 1000
@@ -441,6 +496,107 @@ def solve_catenary(l, delta_H, L):
 #     ])
 
 #     return features
+
+
+
+def build_theta_features_valid(df, L, cable_wet_weight):
+    # Core positions
+    P0 = df[["rod_end X", "rod_end Y", "rod_end Z"]].values / 1000
+    P1 = df[["robot_cable_attach_point X", "robot_cable_attach_point Y", "robot_cable_attach_point Z"]].values / 1000
+    V1 = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values
+    theta = gaussian_filter1d(df["Theta"].values.reshape(-1, 1), sigma=2)
+    
+    rel_vec = P1 - P0
+    l = np.linalg.norm(rel_vec[:, :2], axis=1, keepdims=True)  # horizontal
+    delta_H = rel_vec[:, 2].reshape(-1, 1)                      # vertical
+    unit_rel = rel_vec / (np.linalg.norm(rel_vec, axis=1, keepdims=True) + 1e-8)
+
+    v_surge = np.sum(V1 * unit_rel, axis=1, keepdims=True)
+    
+    # Tension from catenary
+    w_per_unit_length = cable_wet_weight / L
+    from math import sinh
+    def solve_catenary(l_i, h_i, L):
+        try:
+            from scipy.optimize import root_scalar
+            def f(C): return C**2 * (L**2 - h_i**2) - 4 * (np.sinh(0.5 * l_i * C))**2
+            sol = root_scalar(f, bracket=[1e-6, 10], method='brentq')
+            return sol.root
+        except:
+            return np.nan
+    C_vals = np.array([solve_catenary(lv, hv, L) for lv, hv in zip(l.flatten(), delta_H.flatten())])
+    T = (w_per_unit_length * l) / (2 * np.sinh(C_vals.reshape(-1,1) * l/2))
+    T = np.where(np.isnan(T), w_per_unit_length * l / 2, T)
+
+    # Add physics parameters as constants
+    w_wet = cable_wet_weight * np.ones_like(l)  # [N]
+    rho = 1000 * np.ones_like(l)  # Water density [kg/m³]
+    C_d = 1.2 * np.ones_like(l)   # Drag coefficient
+    A = 0.01 * np.ones_like(l)    # Cross-sectional area [m²]
+
+
+    # Final feature list
+    features = np.hstack([
+        theta * v_surge / (l + 1e-8),
+        v_surge / (l + 1e-8),
+        theta * v_surge,
+        v_surge,
+        v_surge**2 / (l + 1e-8),
+        np.sin(theta),
+        delta_H / (l + 1e-8),
+    ])
+
+    return features
+
+
+def build_gamma_features_valid(df, L, cable_wet_weight):
+    P0 = df[["rod_end X", "rod_end Y", "rod_end Z"]].values / 1000
+    P1 = df[["robot_cable_attach_point X", "robot_cable_attach_point Y", "robot_cable_attach_point Z"]].values / 1000
+    V1 = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values
+    gamma = gaussian_filter1d(df["Gamma"].values.reshape(-1, 1), sigma=2)
+
+    rel_vec = P1 - P0
+    l = np.linalg.norm(rel_vec[:, :2], axis=1, keepdims=True)
+    unit_rel = rel_vec / (np.linalg.norm(rel_vec, axis=1, keepdims=True) + 1e-8)
+    v_sway = np.linalg.norm(np.cross(V1, unit_rel), axis=1, keepdims=True)
+
+    delta_H = rel_vec[:, 2].reshape(-1, 1)
+
+    # Tension
+    w_per_unit_length = cable_wet_weight / L
+    from math import sinh
+    def solve_catenary(l_i, h_i, L):
+        try:
+            from scipy.optimize import root_scalar
+            def f(C): return C**2 * (L**2 - h_i**2) - 4 * (np.sinh(0.5 * l_i * C))**2
+            sol = root_scalar(f, bracket=[1e-6, 10], method='brentq')
+            return sol.root
+        except:
+            return np.nan
+    C_vals = np.array([solve_catenary(lv, hv, L) for lv, hv in zip(l.flatten(), delta_H.flatten())])
+    T = (w_per_unit_length * l) / (2 * np.sinh(C_vals.reshape(-1,1) * l/2))
+    T = np.where(np.isnan(T), w_per_unit_length * l / 2, T)
+
+    # Add physics parameters as constants
+    w_wet = cable_wet_weight * np.ones_like(l)  # [N]
+    rho = 1000 * np.ones_like(l)  # Water density [kg/m³]
+    C_d = 1.2 * np.ones_like(l)   # Drag coefficient
+    A = 0.01 * np.ones_like(l)    # Cross-sectional area [m²]
+
+
+    # Final feature list
+    features = np.hstack([
+        gamma * v_sway / (l + 1e-8),
+        v_sway / (l + 1e-8),
+        gamma * v_sway,
+        v_sway,
+        v_sway**2 / (l + 1e-8),
+        T / (l + 1e-8),
+        np.sin(gamma),
+    ])
+
+    return features
+
 
 
 # === Derivatives ===

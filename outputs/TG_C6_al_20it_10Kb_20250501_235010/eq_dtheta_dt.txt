@@ -1,0 +1,7 @@
+complexity                                                  3
+loss                                                 0.002404
+score                                                0.054306
+equation                      (theta_v_surge * -0.0014670109)
+sympy_format                      -0.0014670109*theta_v_surge
+lambda_format    PySRFunction(X=>-0.0014670109*theta_v_surge)
+Name: 1, dtype: object

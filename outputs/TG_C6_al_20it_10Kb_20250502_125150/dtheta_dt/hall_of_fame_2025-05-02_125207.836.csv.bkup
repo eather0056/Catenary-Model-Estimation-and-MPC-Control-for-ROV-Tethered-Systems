@@ -1,0 +1,6 @@
+Complexity,Loss,Equation
+1,0.002679396,"0.0018328764"
+3,0.0025159647,"(0.053368263 * angle_proj_tanh)"
+4,0.0018868536,"(abs(theta_angle) * angle_proj_tanh)"
+5,0.0018863989,"(tanh(abs(theta_angle)) * angle_proj_tanh)"
+6,0.001794854,"(abs(theta_angle) * (angle_proj_tanh + gamma_angle))"

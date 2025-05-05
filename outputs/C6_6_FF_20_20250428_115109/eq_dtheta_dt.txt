@@ -1,7 +1,0 @@
-complexity                                                  6
-loss                                                 0.002342
-score                                                0.125769
-equation                       (square(0.16999803 * x0) * x6)
-sympy_format                      0.0288993302038809*x0**2*x6
-lambda_format    PySRFunction(X=>0.0288993302038809*x0**2*x6)
-Name: 4, dtype: object

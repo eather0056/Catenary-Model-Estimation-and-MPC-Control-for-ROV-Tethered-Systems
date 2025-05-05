@@ -1,0 +1,7 @@
+complexity                                                 3
+loss                                                0.004159
+score                                               0.067311
+equation                      (0.00062230346 * gamma_v_sway)
+sympy_format                      0.00062230346*gamma_v_sway
+lambda_format    PySRFunction(X=>0.00062230346*gamma_v_sway)
+Name: 2, dtype: object

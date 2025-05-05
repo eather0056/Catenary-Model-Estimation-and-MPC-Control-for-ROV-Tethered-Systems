@@ -1,0 +1,7 @@
+Complexity,Loss,Equation
+1,0.99999994,"5.0137005e-6"
+2,0.99993634,"neg(torque)"
+3,0.8658727,"(gamma_v_sway_l * 0.013056016)"
+4,0.86524844,"(square(0.115536064) * gamma_v_sway_l)"
+5,0.8290407,"((gamma_v_sway_l * 0.013056016) - sin_gamma)"
+7,0.8155208,"(((gamma_v_sway_l * 0.013056016) / 0.7866162) - sin_gamma)"

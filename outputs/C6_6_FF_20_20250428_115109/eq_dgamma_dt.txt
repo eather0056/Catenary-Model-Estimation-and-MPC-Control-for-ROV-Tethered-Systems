@@ -1,7 +1,0 @@
-complexity                                                       8
-loss                                                      0.001426
-score                                                     0.438553
-equation                     (0.039812624 * (x3 - (x8 * cos(x3))))
-sympy_format               0.039812624*x3 - 0.039812624*x8*cos(x3)
-lambda_format    PySRFunction(X=>0.039812624*x3 - 0.039812624*x...
-Name: 6, dtype: object

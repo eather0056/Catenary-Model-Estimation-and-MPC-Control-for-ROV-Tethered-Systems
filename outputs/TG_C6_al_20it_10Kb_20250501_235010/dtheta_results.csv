@@ -1,0 +1,7 @@
+complexity,loss,score,equation,sympy_format,lambda_format
+1,0.002679396,0.0,0.0018290383,0.00182903830000000,PySRFunction(X=>0.00182903830000000)
+3,0.0024036297,0.05430571306074919,(theta_v_surge * -0.0014670109),-0.0014670109*theta_v_surge,PySRFunction(X=>-0.0014670109*theta_v_surge)
+4,0.0024033384,0.00012119905699254095,tanh(theta_v_surge * -0.0014670109),-tanh(0.0014670109*theta_v_surge),PySRFunction(X=>-tanh(0.0014670109*theta_v_surge))
+12,0.0023907358,0.0006571982673056064,((tanh((theta_angle / gamma_angle) + neg(abs(T))) + theta_v_surge) * -0.0014670109),-0.0014670109*theta_v_surge + 0.0014670109*tanh(Abs(T) - theta_angle/gamma_angle),PySRFunction(X=>-0.0014670109*theta_v_surge + 0.0014670109*tanh(Abs(T) - theta_angle/gamma_angle))
+13,0.0023907288,2.9279731570899978e-06,((tanh((theta_angle / gamma_angle) + neg(abs(tanh(T)))) + theta_v_surge) * -0.0014670109),-0.0014670109*theta_v_surge + 0.0014670109*tanh(Abs(tanh(T)) - theta_angle/gamma_angle),PySRFunction(X=>-0.0014670109*theta_v_surge + 0.0014670109*tanh(Abs(tanh(T)) - theta_angle/gamma_angle))
+15,0.0023901465,0.00012179778102127378,((tanh((theta_angle / (tanh(w_wet) * gamma_angle)) + neg(abs(T))) + theta_v_surge) * -0.0014670109),-0.0014670109*theta_v_surge + 0.0014670109*tanh(Abs(T) - theta_angle/(gamma_angle*tanh(w_wet))),PySRFunction(X=>-0.0014670109*theta_v_surge + 0.0014670109*tanh(Abs(T) - theta_angle/(gamma_angle*tanh(w_wet))))

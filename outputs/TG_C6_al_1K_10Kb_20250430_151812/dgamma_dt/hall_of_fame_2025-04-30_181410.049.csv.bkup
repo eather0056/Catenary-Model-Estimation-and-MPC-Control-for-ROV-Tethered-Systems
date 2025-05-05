@@ -1,0 +1,11 @@
+Complexity,Loss,Equation
+1,0.004721029,"0.0006245248"
+2,0.004448064,"square(theta_angle)"
+3,0.0041214735,"(-0.0009889985 * theta_v_sway)"
+5,0.003924864,"(0.0006245248 * (gamma_v_sway - theta_v_sway))"
+6,0.003784948,"((gamma_angle * neg(-1.5735851e-6)) * v_sway_sq)"
+7,0.0037800667,"((tanh(gamma_angle) * neg(-1.5735851e-6)) * v_sway_sq)"
+9,0.0037454967,"(((gamma_angle * -1.5735851e-6) / -0.63494825) * (v_sway_sq - v_surge_X_v_sway))"
+10,0.0037157258,"(((gamma_angle * tanh(-1.5735851e-6)) / tanh(neg(l))) * v_sway_sq)"
+11,0.0037067798,"(((tanh(gamma_angle) * tanh(-1.5735851e-6)) / tanh(neg(l))) * v_sway_sq)"
+14,0.0036778436,"(square((theta_v_sway - theta_v_sway) + gamma_angle) - tanh((0.0015537702 * 0.82238746) * neg(gamma_v_sway)))"

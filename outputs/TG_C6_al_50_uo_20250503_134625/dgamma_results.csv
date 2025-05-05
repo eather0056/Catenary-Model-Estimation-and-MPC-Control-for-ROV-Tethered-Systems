@@ -1,0 +1,7 @@
+complexity, loss      , score                , equation                                                                       , sympy_format                                         , lambda_format
+         1, 1.0       , 0.0                  , 2.6911966e-6                                                                   , 2.69119660000000e-6                                  , PySRFunction(X=>0.00000269119660000000)
+         2, 0.9999433 , 5.670160750578463e-05, neg(torque)                                                                    , -torque                                              , PySRFunction(X=>-torque)
+         3, 0.9324362 , 0.06989784642785747  , (0.01664548 * gamma_v_sway)                                                    , 0.01664548*gamma_v_sway                              , PySRFunction(X=>0.01664548*gamma_v_sway)
+         4, 0.93242395, 1.313771437525707e-05, (sin(0.01664548) * gamma_v_sway)                                               , 0.016644711344564*gamma_v_sway                       , PySRFunction(X=>0.016644711344564*gamma_v_sway)
+         8, 0.8669465 , 0.01820258134789241  , ((cos(-0.9233632) * gamma_v_sway_l) * (-0.03717218 + 0.06461322))              , 0.0165508154305025*gamma_v_sway_l                    , PySRFunction(X=>0.0165508154305025*gamma_v_sway_l)
+        10, 0.86133045, 0.0032495195676344717, (((cos(-0.9233632) * gamma_v_sway_l) + 1.5226052) * (-0.03717218 + 0.06461322)), 0.0165508154305025*gamma_v_sway_l + 0.041781870197408, PySRFunction(X=>0.0165508154305025*gamma_v_sway_l + 0.041781870197408)

@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=C6_yy_tg_FF_1k
+#SBATCH --job-name=TG_C6_al_50_F
 #SBATCH --partition=mundus     # or gpu for guaranteed
 #SBATCH --cpus-per-task=64
 #SBATCH --mem=180G
 #SBATCH --time=4-00:00:00
-#SBATCH -o /home/mundus/mdeowan698/Catenary_Dynamic/Results/logs/C6_yy_tg_FF_1k_out.log
-#SBATCH -e /home/mundus/mdeowan698/Catenary_Dynamic/Results/logs/C6_yy_tg_FF_1k_err.log
+#SBATCH -o /home/mundus/mdeowan698/Catenary_Dynamic/Results/logs/TG_C6_al_50_F_out.log
+#SBATCH -e /home/mundus/mdeowan698/Catenary_Dynamic/Results/logs/TG_C6_al_50_F_err.log
 
 # === Setup ===
 cd /home/mundus/mdeowan698/Catenary_Dynamic

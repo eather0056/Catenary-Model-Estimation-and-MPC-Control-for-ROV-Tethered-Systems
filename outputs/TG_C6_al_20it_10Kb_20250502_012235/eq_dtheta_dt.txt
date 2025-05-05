@@ -1,0 +1,7 @@
+complexity                                   4
+loss                                  0.002243
+score                                 0.171923
+equation                 (square(A) * v_surge)
+sympy_format                      A**2*v_surge
+lambda_format    PySRFunction(X=>A**2*v_surge)
+Name: 2, dtype: object

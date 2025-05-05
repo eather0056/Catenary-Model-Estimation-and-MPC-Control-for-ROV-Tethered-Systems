@@ -1,0 +1,7 @@
+Complexity,Loss,Equation
+1,0.002679396,"0.0018290383"
+3,0.0024036297,"(theta_v_surge * -0.0014670109)"
+4,0.0024033384,"tanh(theta_v_surge * -0.0014670109)"
+12,0.0023907358,"((tanh((theta_angle / gamma_angle) + neg(abs(T))) + theta_v_surge) * -0.0014670109)"
+13,0.0023907288,"((tanh((theta_angle / gamma_angle) + neg(abs(tanh(T)))) + theta_v_surge) * -0.0014670109)"
+15,0.0023901465,"((tanh((theta_angle / (tanh(w_wet) * gamma_angle)) + neg(abs(T))) + theta_v_surge) * -0.0014670109)"

@@ -11,11 +11,17 @@ from main_fun import *
 # pathlib.PosixPath = pathlib.WindowsPath
 
 # === Define The Run Name ===
-ranname = "C6_2_FF_1k_20250425_121524"
+ranname = "TG_C6_al_50_uo_20250503_130727"
 # === Load Models and Scaler ===
-model_theta = joblib.load("outputs/C6_2_FF_1k_20250425_121524/model_dtheta_dt.pkl")  
-model_gamma = joblib.load("outputs/C6_2_FF_1k_20250425_121524/model_dgamma_dt.pkl")  
-scaler = joblib.load("outputs/C6_2_FF_1k_20250425_121524/scaler.pkl")  
+model_theta = joblib.load("outputs/TG_C6_al_50_uo_20250503_130727/model_dtheta_dt.pkl")  
+model_gamma = joblib.load("outputs/TG_C6_al_50_uo_20250503_130727/model_dgamma_dt.pkl")  
+scaler_theta = joblib.load("outputs/TG_C6_al_50_uo_20250503_130727/scaler_theta.pkl")  
+scaler_gamma = joblib.load("outputs/TG_C6_al_50_uo_20250503_130727/scaler_gamma.pkl")
+
+# Cable parameters from experimental setup (Table I for cable 6)
+L = 3.0  # [m]
+cable_wet_weight = 1.521  # [N] (From Table I, cable 6: wet weight=1.521N)
+
 
 # === Load and Preprocess Dataset ===
 file_name = "L_dynamique6y200dis1_0024.csv"
@@ -30,13 +36,56 @@ df = pd.read_csv(file_path)
 
 
 # === Extract Features ===
-X = extract_features(df)
-X_scaled = scaler.transform(X)
+# X_theta = extract_features(df)
+
+X_theta = build_theta_features_valid(df, L, cable_wet_weight)    # for theta
+X_gamma = build_gamma_features_valid(df, L, cable_wet_weight)    # for gamma
+
+# Compute derivatives
+y_dtheta_dt, y_dgamma_dt = compute_derivatives(df)
+
+# # Step 2: Compute targets
+# theta_dot, gamma_dot = compute_derivatives(df)
+
+# # === Step 1: Rescale gamma_dot and theta_dot ===
+# gamma_mean, gamma_std = gamma_dot.mean(), gamma_dot.std()
+# theta_mean, theta_std = theta_dot.mean(), theta_dot.std()
+
+# y_dgamma_dt = (gamma_dot - gamma_mean) / gamma_std
+# y_dtheta_dt = (theta_dot - theta_mean) / theta_std
+
+X_scaled_theta = scaler_theta.transform(X_theta)
+X_scaled_gamma = scaler_gamma.transform(X_gamma)
+
 time = df["Time"].values
 
+
+# # === Choose Specific Equation by Index or Filter Criteria ===
+# # Example 1: Choose equation with specific complexity
+# selected_eq_theta = model_theta.equations_[model_theta.equations_["complexity"] == 8].iloc[0]
+# selected_eq_gamma = model_gamma.equations_[model_gamma.equations_["complexity"] == 6].iloc[0]
+
+# # Print selected equations
+# print(f"\n[Custom] eq_dtheta_dt: {selected_eq_theta['equation']}")
+# print(f"[Custom] eq_dgamma_dt: {selected_eq_gamma['equation']}")
+
+
+# # === Get Lambda Function (if not already callable) ===
+# def get_lambda_function(eq_row):
+#     f = eq_row["lambda_format"]
+#     return f if callable(f) else eval(f)
+
+# # === Get Lambda Functions ===
+# predict_theta_custom = get_lambda_function(selected_eq_theta)
+# predict_gamma_custom = get_lambda_function(selected_eq_gamma)
+
+# # === Predict Derivatives Using Custom Equations ===
+# dtheta_pred = predict_theta_custom(X_scaled_theta)
+# dgamma_pred = predict_gamma_custom(X_scaled_gamma)
+
 # === Predict Derivatives ===
-dtheta_pred = model_theta.predict(X_scaled)
-dgamma_pred = model_gamma.predict(X_scaled)
+dtheta_pred = model_theta.predict(X_scaled_theta) #* theta_std + theta_mean
+dgamma_pred = model_gamma.predict(X_scaled_gamma) #* gamma_std + gamma_mean
 
 # === Integrate to Estimate Theta and Gamma ===
 theta_est = np.zeros_like(dtheta_pred)
@@ -68,7 +117,7 @@ print(f"R² Score for Gamma(t): {r2_score(gamma_true, gamma_est):.4f}")
 # === Time-Series Plot ===
 plt.figure(figsize=(14, 8))
 
-plt.subplot(2, 2, 1)
+plt.subplot(4, 2, 1)
 plt.plot(time, theta_true, label="True Theta", color="blue")
 plt.plot(time, theta_est, '--', label="Predicted Theta", color="red")
 plt.ylabel("Theta (rad)")
@@ -76,7 +125,7 @@ plt.title("Theta(t) Prediction")
 plt.legend()
 plt.grid()
 
-plt.subplot(2, 2, 2)
+plt.subplot(4, 2, 2)
 plt.plot(time, gamma_true, label="True Gamma", color="blue")
 plt.plot(time, gamma_est, '--', label="Predicted Gamma", color="red")
 plt.ylabel("Gamma (rad)")
@@ -84,14 +133,14 @@ plt.title("Gamma(t) Prediction")
 plt.legend()
 plt.grid()
 
-plt.subplot(4, 2, 5)
+plt.subplot(4, 2, 3)
 plt.plot(time, theta_error, label="Theta Error", color="purple")
 plt.title("Theta(t)  Estimation Error")
 plt.legend()
 plt.ylabel("Error (rad)")
 plt.xlabel("Time (s)")
 
-plt.subplot(4, 2, 6)
+plt.subplot(4, 2, 4)
 plt.plot(time, gamma_error, label="Gamma Error", color="orange")
 plt.title("Gamma(t)  Estimation Error")
 plt.ylabel("Error (rad)")
@@ -101,19 +150,36 @@ plt.legend()
 theta_percentage_error = (theta_error / theta_true) * 100
 gamma_percentage_error = (gamma_error / gamma_true) * 100
 
-plt.subplot(4, 2, 7)
+plt.subplot(4, 2, 5)
 plt.plot(time, theta_percentage_error, label="Theta % Error", color="purple")
 plt.title("Theta(t) Estimation Percentage Error")
 plt.legend()
 plt.ylabel("Percentage Error (%)")
 plt.xlabel("Time (s)")
 
-plt.subplot(4, 2, 8)
+plt.subplot(4, 2, 6)
 plt.plot(time, gamma_percentage_error, label="Gamma % Error", color="orange")
 plt.title("Gamma(t)  Estimation Percentage Error")
 plt.ylabel("Percentage Error (%)")
 plt.xlabel("Time (s)")
 plt.legend()
+
+plt.subplot(4, 2, 7)
+plt.plot(time, y_dtheta_dt, label="True dTheta", color="blue")
+plt.plot(time, dtheta_pred, '--', label="Predicted dTheta", color="red")
+plt.ylabel("dTheta (rad/s)")
+plt.title("dt Theta(t) Prediction")
+plt.legend()
+plt.grid()
+
+plt.subplot(4, 2, 8)
+plt.plot(time, y_dgamma_dt, label="True dGamma", color="blue")
+plt.plot(time, dgamma_pred, '--', label="Predicted dGamma", color="red")
+plt.ylabel("dGamma (rad/s)")
+plt.title("dt Gamma(t) Prediction")
+plt.legend()
+plt.grid()
+
 
 plt.tight_layout()
 plt.savefig(os.path.join(output_dir, f"predictions_{file_name}.png"))

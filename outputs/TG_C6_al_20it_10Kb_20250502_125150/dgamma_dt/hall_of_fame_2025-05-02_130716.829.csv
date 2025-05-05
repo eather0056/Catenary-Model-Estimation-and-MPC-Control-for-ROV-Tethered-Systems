@@ -1,0 +1,8 @@
+Complexity,Loss,Equation
+1,0.004721029,"0.0006245227"
+2,0.004448064,"square(theta_angle)"
+4,0.0042770673,"square(theta_angle / delta_H)"
+5,0.0042768153,"tanh(square(theta_angle / delta_H))"
+6,0.004276601,"tanh(tanh(square(theta_angle / delta_H)))"
+7,0.004273912,"tanh(square((theta_angle * 0.9774126) / delta_H))"
+8,0.0042738994,"tanh(tanh(square((theta_angle * 0.9774126) / delta_H)))"

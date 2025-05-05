@@ -1,0 +1,6 @@
+complexity,loss,score,equation,sympy_format,lambda_format
+1,0.99991876,0.0,torque,torque,PySRFunction(X=>torque)
+3,0.6553455,0.21125572909993168,(v_surge_l * 0.010146481),0.010146481*v_surge_l,PySRFunction(X=>0.010146481*v_surge_l)
+5,0.64522254,0.007783648468688061,((v_surge_l + theta_v_surge_l) * 0.010146481),0.010146481*theta_v_surge_l + 0.010146481*v_surge_l,PySRFunction(X=>0.010146481*theta_v_surge_l + 0.010146481*v_surge_l)
+7,0.5938342,0.041497562361872756,((0.43788034 - (-0.013945298 * v_surge)) / 1.7395887),0.00801643399960002*v_surge + 0.251714868002994,PySRFunction(X=>0.00801643399960002*v_surge + 0.251714868002994)
+13,0.58293897,0.0030862762709901307,(((((v_surge * (v_surge_l + 479.38535)) * 2.0278729e-5) + 1.2131349) + 0.09852623) + -1.1033325),2.0278729e-5*v_surge*(v_surge_l + 479.38535) + 0.20832863,PySRFunction(X=>2.0278729e-5*v_surge*(v_surge_l + 479.38535) + 0.20832863)

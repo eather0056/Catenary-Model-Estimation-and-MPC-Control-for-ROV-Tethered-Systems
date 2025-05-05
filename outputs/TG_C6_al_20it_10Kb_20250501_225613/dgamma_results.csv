@@ -1,0 +1,5 @@
+complexity,loss,score,equation,sympy_format,lambda_format
+1,0.004721029,0.0,0.0006212306,0.000621230600000000,PySRFunction(X=>0.000621230600000000)
+2,0.004448064,0.059557838977669426,square(theta_angle),theta_angle**2,PySRFunction(X=>theta_angle**2)
+3,0.0041586836,0.0672703634469289,(0.0006212306 * gamma_v_sway),0.0006212306*gamma_v_sway,PySRFunction(X=>0.0006212306*gamma_v_sway)
+5,0.003923847,0.029063015884890495,(0.0006212306 * (gamma_v_sway - theta_v_sway)),0.0006212306*gamma_v_sway - 0.0006212306*theta_v_sway,PySRFunction(X=>0.0006212306*gamma_v_sway - 0.0006212306*theta_v_sway)

@@ -1,0 +1,8 @@
+complexity,loss,score,equation,sympy_format,lambda_format
+1,0.002679396,0.0,0.0018323399,0.00183233990000000,PySRFunction(X=>0.00183233990000000)
+3,0.0026634918,0.0029767136369109755,square(square(gamma_angle)),gamma_angle**4,PySRFunction(X=>gamma_angle**4)
+4,0.002574901,0.03382688193960561,square(gamma_angle * delta_H),delta_H**2*gamma_angle**2,PySRFunction(X=>delta_H**2*gamma_angle**2)
+5,0.0024471523,0.05088606477401908,square(neg(gamma_angle / l)),gamma_angle**2/l**2,PySRFunction(X=>gamma_angle**2/l**2)
+9,0.0024122526,0.003591005562743571,square((gamma_angle * delta_H) * square(delta_H * 1.8967817)),12.9440268104464*delta_H**6*gamma_angle**2,PySRFunction(X=>12.9440268104464*delta_H**6*gamma_angle**2)
+12,0.0023908082,0.002976510657768858,(((((theta_v_surge + tanh(delta_H)) + theta_v_surge) * -1.4184538) / 235.63036) * T),T*(-0.0120396522757084*theta_v_surge - 0.00601982613785422*tanh(delta_H)),PySRFunction(X=>T*(-0.0120396522757084*theta_v_surge - 0.00601982613785422*tanh(delta_H)))
+25,0.0023513283,0.0012808511740260886,neg(neg(l * 4.793591e-7) * (square((neg(tanh((v_surge_sq - delta_H) / 0.12585127)) - delta_H) + neg(square(tanh(neg(square(gamma_angle)))))) - v_surge_sq)),4.793591e-7*l*(-v_surge_sq + (-delta_H - tanh(gamma_angle**2)**2 + tanh(7.94588723657695*delta_H - 7.94588723657695*v_surge_sq))**2),PySRFunction(X=>4.793591e-7*l*(-v_surge_sq + (-delta_H - tanh(gamma_angle**2)**2 + tanh(7.94588723657695*delta_H - 7.94588723657695*v_surge_sq))**2))

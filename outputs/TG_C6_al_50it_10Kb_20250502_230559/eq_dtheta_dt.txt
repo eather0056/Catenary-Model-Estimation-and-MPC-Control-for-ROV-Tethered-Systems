@@ -1,0 +1,7 @@
+complexity                                                       4
+loss                                                      0.001887
+score                                                     0.250111
+equation                      (angle_proj_tanh * abs(theta_angle))
+sympy_format                      angle_proj_tanh*Abs(theta_angle)
+lambda_format    PySRFunction(X=>angle_proj_tanh*Abs(theta_angle))
+Name: 2, dtype: object

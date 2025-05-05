@@ -1,0 +1,6 @@
+complexity, loss        , score                 , equation                                            , sympy_format                                    , lambda_format
+         1, 0.002679396 , 0.0                   , 0.0018328764                                        , 0.00183287640000000                             , PySRFunction(X=>0.00183287640000000)
+         3, 0.0025159647, 0.031467543727501546  , (0.053368263 * angle_proj_tanh)                     , 0.053368263*angle_proj_tanh                     , PySRFunction(X=>0.053368263*angle_proj_tanh)
+         4, 0.0018868536, 0.2877456286222509    , (abs(theta_angle) * angle_proj_tanh)                , angle_proj_tanh*Abs(theta_angle)                , PySRFunction(X=>angle_proj_tanh*Abs(theta_angle))
+         5, 0.0018863989, 0.00024101223133150558, (tanh(abs(theta_angle)) * angle_proj_tanh)          , angle_proj_tanh*tanh(Abs(theta_angle))          , PySRFunction(X=>angle_proj_tanh*tanh(Abs(theta_angle)))
+         6, 0.001794854 , 0.04974598609465868   , (abs(theta_angle) * (angle_proj_tanh + gamma_angle)), (angle_proj_tanh + gamma_angle)*Abs(theta_angle), PySRFunction(X=>(angle_proj_tanh + gamma_angle)*Abs(theta_angle))

@@ -1,0 +1,5 @@
+complexity,loss,score,equation,sympy_format,lambda_format
+1,0.99999994,0.0,-4.4893823e-6,-4.48938230000000e-6,PySRFunction(X=>-0.00000448938230000000)
+3,0.8639826,0.0731012946348793,(0.015656129 * gamma_v_sway_l),0.015656129*gamma_v_sway_l,PySRFunction(X=>0.015656129*gamma_v_sway_l)
+5,0.85726243,0.003904269310141914,((0.015656129 * gamma_v_sway_l) + 0.08197591),0.015656129*gamma_v_sway_l + 0.08197591,PySRFunction(X=>0.015656129*gamma_v_sway_l + 0.08197591)
+21,0.78483784,0.005516685493580263,(((((v_sway - ((v_sway - (v_sway - v_sway)) / -3.2931304)) * gamma_v_sway_l) - (v_sway_l + -0.43071127)) * 3.0923104e-5) * (1.1253337 + -0.28082684)),3.40448491904109e-5*gamma_v_sway_l*v_sway - 2.61147734604934e-5*v_sway_l + 1.12479272429314e-5,PySRFunction(X=>3.40448491904109e-5*gamma_v_sway_l*v_sway - 2.61147734604934e-5*v_sway_l + 1.12479272429314e-5)

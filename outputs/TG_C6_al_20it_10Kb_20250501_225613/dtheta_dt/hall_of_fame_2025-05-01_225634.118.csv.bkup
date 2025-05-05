@@ -1,0 +1,8 @@
+Complexity,Loss,Equation
+1,0.002679396,"0.0018323399"
+3,0.0026634918,"square(square(gamma_angle))"
+4,0.002574901,"square(gamma_angle * delta_H)"
+5,0.0024471523,"square(neg(gamma_angle / l))"
+9,0.0024122526,"square((gamma_angle * delta_H) * square(delta_H * 1.8967817))"
+12,0.0023908082,"(((((theta_v_surge + tanh(delta_H)) + theta_v_surge) * -1.4184538) / 235.63036) * T)"
+25,0.0023513283,"neg(neg(l * 4.793591e-7) * (square((neg(tanh((v_surge_sq - delta_H) / 0.12585127)) - delta_H) + neg(square(tanh(neg(square(gamma_angle)))))) - v_surge_sq))"

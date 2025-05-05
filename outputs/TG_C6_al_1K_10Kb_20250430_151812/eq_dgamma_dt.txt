@@ -1,0 +1,7 @@
+complexity                                                 3
+loss                                                0.004121
+score                                               0.076258
+equation                      (-0.0009889985 * theta_v_sway)
+sympy_format                      -0.0009889985*theta_v_sway
+lambda_format    PySRFunction(X=>-0.0009889985*theta_v_sway)
+Name: 2, dtype: object

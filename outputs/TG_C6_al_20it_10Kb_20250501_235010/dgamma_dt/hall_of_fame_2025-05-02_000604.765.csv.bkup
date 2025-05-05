@@ -1,0 +1,4 @@
+Complexity,Loss,Equation
+1,0.004721029,"0.00062230346"
+2,0.004448064,"square(theta_angle)"
+3,0.0041585164,"(0.00062230346 * gamma_v_sway)"

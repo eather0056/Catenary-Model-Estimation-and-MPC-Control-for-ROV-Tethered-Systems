@@ -1,0 +1,7 @@
+complexity                                     2
+loss                                    0.004448
+score                                   0.059558
+equation                     square(theta_angle)
+sympy_format                      theta_angle**2
+lambda_format    PySRFunction(X=>theta_angle**2)
+Name: 1, dtype: object

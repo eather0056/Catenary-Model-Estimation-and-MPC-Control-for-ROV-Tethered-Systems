@@ -1,0 +1,4 @@
+complexity,loss,score,equation,sympy_format,lambda_format
+1,0.002679396,0.0,0.0018321632,0.00183216320000000,PySRFunction(X=>0.00183216320000000)
+3,0.0024230373,0.05028478006634957,(angle_proj_tanh * 0.03339339),0.03339339*angle_proj_tanh,PySRFunction(X=>0.03339339*angle_proj_tanh)
+4,0.0018868536,0.250111155944555,(angle_proj_tanh * abs(theta_angle)),angle_proj_tanh*Abs(theta_angle),PySRFunction(X=>angle_proj_tanh*Abs(theta_angle))

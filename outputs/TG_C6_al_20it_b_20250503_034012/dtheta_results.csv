@@ -1,0 +1,4 @@
+complexity,loss,score,equation,sympy_format,lambda_format
+1,0.99991876,0.0,torque,torque,PySRFunction(X=>torque)
+3,0.6553455,0.21125572909993168,(v_surge_l * 0.010146481),0.010146481*v_surge_l,PySRFunction(X=>0.010146481*v_surge_l)
+7,0.5938342,0.024640605415280417,((0.43788034 - (-0.013945298 * v_surge)) / 1.7395887),0.00801643399960002*v_surge + 0.251714868002994,PySRFunction(X=>0.00801643399960002*v_surge + 0.251714868002994)

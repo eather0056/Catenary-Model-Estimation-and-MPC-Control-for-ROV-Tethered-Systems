@@ -1,0 +1,7 @@
+Complexity,Loss,Equation
+1,0.002679396,"0.0018322297"
+3,0.0026634918,"square(square(gamma_angle))"
+4,0.0022427782,"(square(A) * v_surge)"
+6,0.0017997462,"(square(A + A) * v_surge)"
+7,0.0017991932,"sin(square(A + A) * v_surge)"
+8,0.001799156,"sin(square(sin(A + A)) * v_surge)"

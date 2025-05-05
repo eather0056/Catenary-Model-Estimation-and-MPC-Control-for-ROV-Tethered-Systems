@@ -1,0 +1,7 @@
+complexity                                                       5
+loss                                                      0.001591
+score                                                     0.113428
+equation                 ((0.00041492327 * v_surge) + 0.014864117)
+sympy_format                   0.00041492327*v_surge + 0.014864117
+lambda_format    PySRFunction(X=>0.00041492327*v_surge + 0.0148...
+Name: 3, dtype: object
