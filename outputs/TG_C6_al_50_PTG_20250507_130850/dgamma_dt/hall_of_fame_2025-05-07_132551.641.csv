@@ -1,0 +1,6 @@
+Complexity,Loss,Equation
+1,1.0,"5.4956654e-6"
+2,0.9939458,"neg(theta)"
+3,0.87933457,"(0.009811074 * gamma_v_sway)"
+5,0.84047544,"(0.009811074 * (gamma_v_sway_l + theta_v_surge))"
+7,0.81183976,"((0.009811074 * (gamma_v_sway_l + theta_v_surge)) * 1.4241843)"

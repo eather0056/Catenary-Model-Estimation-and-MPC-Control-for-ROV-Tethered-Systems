@@ -1,0 +1,7 @@
+Complexity,Loss,Equation
+1,0.9858616,"theta_prev"
+3,0.90827537,"sin(neg(theta_v_surge_l))"
+4,0.8908174,"(square(0.11576151) * gamma_v_sway_l)"
+5,0.8670382,"sin(neg(theta_v_surge_l * 0.4558394))"
+6,0.86545974,"sin(neg(theta_v_surge_l * sin(0.4558394)))"
+7,0.78277874,"((theta_v_surge / -877.6932) * (271.43057 - v_surge))"

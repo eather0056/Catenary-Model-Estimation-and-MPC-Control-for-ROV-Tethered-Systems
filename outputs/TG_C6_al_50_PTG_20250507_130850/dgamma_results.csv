@@ -1,0 +1,6 @@
+complexity,loss,score,equation,sympy_format,lambda_format
+1,1.0,0.0,5.4956654e-6,5.49566540000000e-6,PySRFunction(X=>0.00000549566540000000)
+2,0.9939458,0.006072600975200687,neg(theta),-theta,PySRFunction(X=>-theta)
+3,0.87933457,0.12251722703031408,(0.009811074 * gamma_v_sway),0.009811074*gamma_v_sway,PySRFunction(X=>0.009811074*gamma_v_sway)
+5,0.84047544,0.022598859628424072,(0.009811074 * (gamma_v_sway_l + theta_v_surge)),0.009811074*gamma_v_sway_l + 0.009811074*theta_v_surge,PySRFunction(X=>0.009811074*gamma_v_sway_l + 0.009811074*theta_v_surge)
+7,0.81183976,0.01733237546682716,((0.009811074 * (gamma_v_sway_l + theta_v_surge)) * 1.4241843),0.0139727775569382*gamma_v_sway_l + 0.0139727775569382*theta_v_surge,PySRFunction(X=>0.0139727775569382*gamma_v_sway_l + 0.0139727775569382*theta_v_surge)

@@ -1,0 +1,7 @@
+complexity                                            3
+loss                                           0.993819
+score                                           0.00523
+equation                        (-0.072544016 - gamma_)
+sympy_format                      -gamma_ - 0.072544016
+lambda_format    PySRFunction(X=>-gamma_ - 0.072544016)
+Name: 2, dtype: object

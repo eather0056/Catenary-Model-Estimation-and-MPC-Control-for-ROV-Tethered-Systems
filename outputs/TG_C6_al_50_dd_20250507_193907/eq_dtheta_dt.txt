@@ -1,0 +1,7 @@
+complexity                             2
+loss                            0.997296
+score                           0.002707
+equation                      neg(theta)
+sympy_format                      -theta
+lambda_format    PySRFunction(X=>-theta)
+Name: 1, dtype: object

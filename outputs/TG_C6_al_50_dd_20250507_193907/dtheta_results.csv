@@ -1,0 +1,8 @@
+complexity, loss      , score                 , equation                                                  , sympy_format                                                  , lambda_format
+         1, 1.0       , 0.0                   , -2.1311007e-6                                             , -2.13110070000000e-6                                          , PySRFunction(X=>-0.00000213110070000000)
+         2, 0.99729633, 0.0027073315169125474 , neg(theta)                                                , -theta                                                        , PySRFunction(X=>-theta)
+         4, 0.9968998 , 0.0001988420292571853 , (square(dgamma) - theta)                                  , dgamma**2 - theta                                             , PySRFunction(X=>dgamma**2 - theta)
+         5, 0.99689746, 2.3472797830508533e-06, (square(dgamma) - sin(theta))                             , dgamma**2 - sin(theta)                                        , PySRFunction(X=>dgamma**2 - sin(theta))
+         6, 0.99681616, 8.155634713994135e-05 , (square(dgamma * 1.3676407) - theta)                      , 1.87044108429649*dgamma**2 - theta                            , PySRFunction(X=>1.87044108429649*dgamma**2 - theta)
+         7, 0.9968112 , 4.9758546651925825e-06, (square(dgamma * 1.3676407) - sin(theta))                 , 1.87044108429649*dgamma**2 - sin(theta)                       , PySRFunction(X=>1.87044108429649*dgamma**2 - sin(theta))
+         9, 0.9966579 , 7.69011169032956e-05  , (square((dgamma * 1.3676407) - -0.024814704) - sin(theta)), 1.87044108429649*(dgamma + 0.0181441690057922)**2 - sin(theta), PySRFunction(X=>1.87044108429649*(dgamma + 0.0181441690057922)**2 - sin(theta))

@@ -1,0 +1,5 @@
+complexity, loss      , score                , equation                                     , sympy_format                                     , lambda_format
+         1, 1.0       , 0.0                  , -6.486379e-6                                 , -6.48637900000000e-6                             , PySRFunction(X=>-0.00000648637900000000)
+         3, 0.90154123, 0.05182475124913627  , (theta_v_surge * -0.019770235)               , -0.019770235*theta_v_surge                       , PySRFunction(X=>-0.019770235*theta_v_surge)
+         4, 0.653888  , 0.32116969351490604  , (square(0.080097325) * v_surge)              , 0.00641558147215562*v_surge                      , PySRFunction(X=>0.00641558147215562*v_surge)
+         6, 0.6526149 , 0.0009744336602276457, (square(0.080097325) * (v_surge + 0.4896295)), 0.00641558147215562*v_surge + 0.00314125794842082, PySRFunction(X=>0.00641558147215562*v_surge + 0.00314125794842082)

@@ -1,0 +1,11 @@
+Complexity,Loss,Equation
+1,0.33123028,"3.979715e-8"
+3,0.32656008,"(-0.065086745 * gama)"
+5,0.322585,"square(tanh(-0.10307283 * a_sway))"
+7,0.32124978,"sin(square((0.05638909 * gama) * a_surge))"
+8,0.3202446,"sin(tanh(square(0.21195354 * (-0.6134417 + a_sway))))"
+9,0.31908748,"square((sin(-0.105690494 / -0.9617882) / 0.98530054) * a_sway)"
+11,0.31851774,"square(abs(abs(tanh(square(0.21494822 * abs(1.3235307 * a_sway))))))"
+13,0.31821483,"tanh(tanh(abs(tanh(0.27934742)) * abs(square((0.27934742 / 0.8230938) * a_sway))))"
+14,0.31709063,"square(abs(((2.008192 + v_sway) * square(-0.15833473)) / 0.5125035) * (-0.15833473 - a_sway))"
+21,0.31625944,"tanh(square(abs(abs(square(sin(tanh(cos(abs(square(cos(square(dtheta * v_sway))))) * -0.24753116))) * abs(square(a_sway))))))"

@@ -11,12 +11,12 @@ from main_fun import *
 # pathlib.PosixPath = pathlib.WindowsPath
 
 # === Define The Run Name ===
-ranname = "TG_C6_al_50_uo_20250503_130727"
+ranname = "C6_6_dd_1K_20250509_190029"
 # === Load Models and Scaler ===
-model_theta = joblib.load("outputs/TG_C6_al_50_uo_20250503_130727/model_dtheta_dt.pkl")  
-model_gamma = joblib.load("outputs/TG_C6_al_50_uo_20250503_130727/model_dgamma_dt.pkl")  
-scaler_theta = joblib.load("outputs/TG_C6_al_50_uo_20250503_130727/scaler_theta.pkl")  
-scaler_gamma = joblib.load("outputs/TG_C6_al_50_uo_20250503_130727/scaler_gamma.pkl")
+model_theta = joblib.load("outputs/C6_6_dd_1K_20250509_190029/model_dtheta_dt.pkl")  
+model_gamma = joblib.load("outputs/C6_6_dd_1K_20250509_190029/model_dgamma_dt.pkl")  
+scaler_theta = joblib.load("outputs/C6_6_dd_1K_20250509_190029/scaler_theta.pkl")  
+scaler_gamma = joblib.load("outputs/C6_6_dd_1K_20250509_190029/scaler_gamma.pkl")
 
 # Cable parameters from experimental setup (Table I for cable 6)
 L = 3.0  # [m]
@@ -60,34 +60,64 @@ X_scaled_gamma = scaler_gamma.transform(X_gamma)
 time = df["Time"].values
 
 
-# # === Choose Specific Equation by Index or Filter Criteria ===
-# # Example 1: Choose equation with specific complexity
-# selected_eq_theta = model_theta.equations_[model_theta.equations_["complexity"] == 8].iloc[0]
-# selected_eq_gamma = model_gamma.equations_[model_gamma.equations_["complexity"] == 6].iloc[0]
+# === Choose Specific Equation by Index or Filter Criteria ===
+# Example 1: Choose equation with specific complexity
+selected_eq_theta = model_theta.equations_[model_theta.equations_["complexity"] == 8].iloc[0]
+selected_eq_gamma = model_gamma.equations_[model_gamma.equations_["complexity"] == 9].iloc[0]
 
-# # Print selected equations
-# print(f"\n[Custom] eq_dtheta_dt: {selected_eq_theta['equation']}")
-# print(f"[Custom] eq_dgamma_dt: {selected_eq_gamma['equation']}")
+# Print selected equations
+print(f"\n[Custom] eq_dtheta_dt: {selected_eq_theta['equation']}")
+print(f"[Custom] eq_dgamma_dt: {selected_eq_gamma['equation']}")
 
 
-# # === Get Lambda Function (if not already callable) ===
-# def get_lambda_function(eq_row):
-#     f = eq_row["lambda_format"]
-#     return f if callable(f) else eval(f)
+# === Get Lambda Function (if not already callable) ===
+def get_lambda_function(eq_row):
+    f = eq_row["lambda_format"]
+    return f if callable(f) else eval(f)
 
-# # === Get Lambda Functions ===
-# predict_theta_custom = get_lambda_function(selected_eq_theta)
-# predict_gamma_custom = get_lambda_function(selected_eq_gamma)
+# === Get Lambda Functions ===
+predict_theta_custom = get_lambda_function(selected_eq_theta)
+predict_gamma_custom = get_lambda_function(selected_eq_gamma)
 
-# # === Predict Derivatives Using Custom Equations ===
-# dtheta_pred = predict_theta_custom(X_scaled_theta)
-# dgamma_pred = predict_gamma_custom(X_scaled_gamma)
+# === Predict Derivatives Using Custom Equations ===
+dtheta_pred = predict_theta_custom(X_scaled_theta)
+dgamma_pred = predict_gamma_custom(X_scaled_gamma)
 
-# === Predict Derivatives ===
-dtheta_pred = model_theta.predict(X_scaled_theta) #* theta_std + theta_mean
-dgamma_pred = model_gamma.predict(X_scaled_gamma) #* gamma_std + gamma_mean
+# # === Predict Derivatives ===
+# dtheta_pred = model_theta.predict(X_scaled_theta) #* theta_std + theta_mean
+# dgamma_pred = model_gamma.predict(X_scaled_gamma) #* gamma_std + gamma_mean
 
-# === Integrate to Estimate Theta and Gamma ===
+# # === Integrate to Estimate Theta and Gamma ===
+# theta_est = np.zeros_like(dtheta_pred)
+# gamma_est = np.zeros_like(dgamma_pred)
+# theta_est[0] = df["Theta"].values[0]
+# gamma_est[0] = df["Gamma"].values[0]
+
+# for i in range(1, len(time)):
+#     dt = time[i] - time[i - 1]
+#     theta_est[i] = theta_est[i - 1] + dtheta_pred[i - 1] * dt
+#     gamma_est[i] = gamma_est[i - 1] + dgamma_pred[i - 1] * dt
+
+# theta_true = df["Theta"].values
+# gamma_true = df["Gamma"].values
+# theta_error = theta_true - theta_est
+# gamma_error = gamma_true - gamma_est
+
+# === Second Derivative is Given ===
+# dtheta_pred = model_theta.predict(X_scaled_theta) #* theta_std + theta_mean
+# dgamma_pred = model_gamma.predict(X_scaled_gamma) #* gamma_std + gamma_mean
+
+# === First Derivative Initialization (Velocity) ===
+theta_dot = np.zeros_like(dtheta_pred)
+gamma_dot = np.zeros_like(dgamma_pred)
+
+# === First Integration: Angular Velocities ===
+for i in range(1, len(time)):
+    dt = time[i] - time[i - 1]
+    theta_dot[i] = theta_dot[i - 1] + dtheta_pred[i - 1] * dt
+    gamma_dot[i] = gamma_dot[i - 1] + dgamma_pred[i - 1] * dt
+
+# === Second Integration: Angular Positions ===
 theta_est = np.zeros_like(dtheta_pred)
 gamma_est = np.zeros_like(dgamma_pred)
 theta_est[0] = df["Theta"].values[0]
@@ -95,9 +125,10 @@ gamma_est[0] = df["Gamma"].values[0]
 
 for i in range(1, len(time)):
     dt = time[i] - time[i - 1]
-    theta_est[i] = theta_est[i - 1] + dtheta_pred[i - 1] * dt
-    gamma_est[i] = gamma_est[i - 1] + dgamma_pred[i - 1] * dt
+    theta_est[i] = theta_est[i - 1] + theta_dot[i - 1] * dt
+    gamma_est[i] = gamma_est[i - 1] + gamma_dot[i - 1] * dt
 
+# === Compare with Ground Truth ===
 theta_true = df["Theta"].values
 gamma_true = df["Gamma"].values
 theta_error = theta_true - theta_est
@@ -165,18 +196,18 @@ plt.xlabel("Time (s)")
 plt.legend()
 
 plt.subplot(4, 2, 7)
-plt.plot(time, y_dtheta_dt, label="True dTheta", color="blue")
-plt.plot(time, dtheta_pred, '--', label="Predicted dTheta", color="red")
-plt.ylabel("dTheta (rad/s)")
-plt.title("dt Theta(t) Prediction")
+plt.plot(time, y_dtheta_dt, label="True ddTheta", color="blue")
+plt.plot(time, dtheta_pred, '--', label="Predicted ddTheta", color="red")
+plt.ylabel("ddTheta (rad/s)")
+plt.title("ddt Theta(t) Prediction")
 plt.legend()
 plt.grid()
 
 plt.subplot(4, 2, 8)
-plt.plot(time, y_dgamma_dt, label="True dGamma", color="blue")
-plt.plot(time, dgamma_pred, '--', label="Predicted dGamma", color="red")
-plt.ylabel("dGamma (rad/s)")
-plt.title("dt Gamma(t) Prediction")
+plt.plot(time, y_dgamma_dt, label="True ddGamma", color="blue")
+plt.plot(time, dgamma_pred, '--', label="Predicted ddGamma", color="red")
+plt.ylabel("ddGamma (rad/s)")
+plt.title("ddt Gamma(t) Prediction")
 plt.legend()
 plt.grid()
 

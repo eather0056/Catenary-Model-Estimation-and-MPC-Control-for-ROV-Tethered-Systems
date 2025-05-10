@@ -7,6 +7,8 @@ import numpy as np
 from typing import Callable, Tuple
 from scipy.interpolate import interp1d
 from scipy.optimize import root_scalar
+from scipy.signal import savgol_filter
+
 
 
 
@@ -504,14 +506,27 @@ def build_theta_features_valid(df, L, cable_wet_weight):
     P0 = df[["rod_end X", "rod_end Y", "rod_end Z"]].values / 1000
     P1 = df[["robot_cable_attach_point X", "robot_cable_attach_point Y", "robot_cable_attach_point Z"]].values / 1000
     V1 = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values
+    time_array = df["Time"].values
     theta = gaussian_filter1d(df["Theta"].values.reshape(-1, 1), sigma=2)
-    
+    gamma = gaussian_filter1d(df["Gamma"].values.reshape(-1, 1), sigma=2)
+    theta_prev = np.roll(theta, 1)
+    gamma_prev = np.roll(gamma, 1)
+    theta_prev[0] = theta[0]
+    gamma_prev[0] = gamma[0]
+
+    theta_ = gaussian_filter1d(df["Theta"].values, sigma=2)
+    gamma_ = gaussian_filter1d(df["Gamma"].values, sigma=2)
+    # First derivatives
+    dtheta = np.gradient(theta_, time_array).reshape(-1, 1)
+    dgamma = np.gradient(gamma_, time_array).reshape(-1, 1)
+
     rel_vec = P1 - P0
     l = np.linalg.norm(rel_vec[:, :2], axis=1, keepdims=True)  # horizontal
     delta_H = rel_vec[:, 2].reshape(-1, 1)                      # vertical
     unit_rel = rel_vec / (np.linalg.norm(rel_vec, axis=1, keepdims=True) + 1e-8)
 
     v_surge = np.sum(V1 * unit_rel, axis=1, keepdims=True)
+    v_sway = np.linalg.norm(np.cross(V1, unit_rel), axis=1, keepdims=True)
     
     # Tension from catenary
     w_per_unit_length = cable_wet_weight / L
@@ -542,22 +557,43 @@ def build_theta_features_valid(df, L, cable_wet_weight):
         theta * v_surge,
         v_surge,
         v_surge**2 / (l + 1e-8),
-        np.sin(theta),
-        delta_H / (l + 1e-8),
+        theta,
+        gamma,
+        gamma * v_sway / (l + 1e-8),
+        v_sway / (l + 1e-8),
+        gamma * v_sway,
+        v_sway,
+        # theta_prev,
+        # gamma_prev,
+        dtheta,
+        dgamma,
     ])
 
     return features
-
 
 def build_gamma_features_valid(df, L, cable_wet_weight):
     P0 = df[["rod_end X", "rod_end Y", "rod_end Z"]].values / 1000
     P1 = df[["robot_cable_attach_point X", "robot_cable_attach_point Y", "robot_cable_attach_point Z"]].values / 1000
     V1 = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values
     gamma = gaussian_filter1d(df["Gamma"].values.reshape(-1, 1), sigma=2)
+    theta = gaussian_filter1d(df["Theta"].values.reshape(-1, 1), sigma=2)
+    theta_prev = np.roll(theta, 1)
+    gamma_prev = np.roll(gamma, 1)
+    theta_prev[0] = theta[0]
+    gamma_prev[0] = gamma[0]
+
+    time_array = df["Time"].values
+    theta_ = gaussian_filter1d(df["Theta"].values, sigma=2)
+    gamma_ = gaussian_filter1d(df["Gamma"].values, sigma=2)
+    # First derivatives
+    dtheta = np.gradient(theta_, time_array).reshape(-1, 1)
+    dgamma = np.gradient(gamma_, time_array).reshape(-1, 1)
 
     rel_vec = P1 - P0
     l = np.linalg.norm(rel_vec[:, :2], axis=1, keepdims=True)
     unit_rel = rel_vec / (np.linalg.norm(rel_vec, axis=1, keepdims=True) + 1e-8)
+
+    v_surge = np.sum(V1 * unit_rel, axis=1, keepdims=True)
     v_sway = np.linalg.norm(np.cross(V1, unit_rel), axis=1, keepdims=True)
 
     delta_H = rel_vec[:, 2].reshape(-1, 1)
@@ -591,22 +627,32 @@ def build_gamma_features_valid(df, L, cable_wet_weight):
         gamma * v_sway,
         v_sway,
         v_sway**2 / (l + 1e-8),
-        T / (l + 1e-8),
-        np.sin(gamma),
+        theta,
+        gamma,
+        theta * v_surge / (l + 1e-8),
+        v_surge / (l + 1e-8),
+        theta * v_surge,
+        v_surge,
+        # theta_prev,
+        # gamma_prev,
+        dtheta,
+        dgamma,
     ])
 
     return features
 
-
-
 # === Derivatives ===
 def compute_derivatives(df):
     time_array = df["Time"].values
-    theta = df["Theta"].values
-    gamma = df["Gamma"].values
+    theta_raw = df["Theta"].values
+    gamma_raw = df["Gamma"].values
+    theta = savgol_filter(theta_raw, window_length=11, polyorder=3)
+    gamma = savgol_filter(gamma_raw, window_length=11, polyorder=3)
     dtheta = np.gradient(theta, time_array)
     dgamma = np.gradient(gamma, time_array)
-    return dtheta, dgamma
+    ddtheta = np.gradient(dtheta, time_array)
+    ddgamma = np.gradient(dgamma, time_array)
+    return ddtheta, ddgamma
 
 # === Background Logger for Training Progress ===
 def log_pysr_progress(model, label, total_iters, interval=60):
@@ -762,3 +808,65 @@ def plot_integration(time_array, theta_true, theta_pred, gamma_true, gamma_pred)
     plt.tight_layout()
     plt.show()
 
+def features_dd(df):
+
+    P0 = df[["rod_end X", "rod_end Y", "rod_end Z"]].values / 1000
+    P1 = df[["robot_cable_attach_point X", "robot_cable_attach_point Y", "robot_cable_attach_point Z"]].values / 1000
+    V1 = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values/1000
+    time_array = df["Time"].values
+
+    theta_raw = df["Theta"].values
+    gamma_raw = df["Gamma"].values
+
+    V_x = df["rob_cor_speed X"].values/1000
+    V_y = df["rob_cor_speed Y"].values/1000
+    V_z = df["rob_cor_speed Z"].values/1000
+
+    a_x = np.gradient(df["rob_cor_speed X"].values/1000, time_array)
+    a_y = np.gradient(df["rob_cor_speed Y"].values/1000, time_array)
+    a_z = np.gradient(df["rob_cor_speed Z"].values/1000, time_array)
+
+    # Smoothed values
+    theta_smooth = savgol_filter(theta_raw, window_length=11, polyorder=3)
+    gamma_smooth = savgol_filter(gamma_raw, window_length=11, polyorder=3)
+
+    theta_dot = np.gradient(theta_smooth, time_array)
+    gamma_dot = np.gradient(gamma_smooth, time_array)
+    theta_ddot = np.gradient(theta_dot, time_array)
+    gamma_ddot = np.gradient(gamma_dot, time_array)
+
+    # Cable-relative velocities
+    rel_vec = P1 - P0
+    l = np.linalg.norm(rel_vec[:, :2], axis=1, keepdims=True)
+    unit_rel = rel_vec / (np.linalg.norm(rel_vec, axis=1, keepdims=True) + 1e-8)
+    v_surge = np.sum(V1 * unit_rel, axis=1, keepdims=True)
+    v_sway = np.linalg.norm(np.cross(V1, unit_rel), axis=1, keepdims=True)
+
+    # Accelerations
+    a_surge = np.gradient(v_surge.squeeze(), time_array).reshape(-1, 1)
+    a_sway = np.gradient(v_sway.squeeze(), time_array).reshape(-1, 1)
+
+    features = np.hstack([
+        theta_smooth.reshape(-1, 1),
+        gamma_smooth.reshape(-1, 1),
+        theta_dot.reshape(-1, 1),
+        gamma_dot.reshape(-1, 1),
+        v_sway,
+        v_surge,
+        a_sway,
+        a_surge,
+        V_x.reshape(-1, 1),
+        V_y.reshape(-1, 1),
+        V_z.reshape(-1, 1),
+        a_x.reshape(-1, 1),
+        a_y.reshape(-1, 1),
+        a_z.reshape(-1, 1),
+        l,
+    ])
+
+    targets = np.hstack([
+        theta_ddot.reshape(-1, 1),
+        gamma_ddot.reshape(-1, 1),
+    ])
+
+    return features, targets

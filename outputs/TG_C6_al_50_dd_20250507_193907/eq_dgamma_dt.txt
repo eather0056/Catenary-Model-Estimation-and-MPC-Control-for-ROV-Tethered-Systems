@@ -1,0 +1,7 @@
+complexity                                             6
+loss                                            0.993786
+score                                           0.001891
+equation             ((gamma_ * -1.1124387) / square(l))
+sympy_format                      -1.1124387*gamma_/l**2
+lambda_format    PySRFunction(X=>-1.1124387*gamma_/l**2)
+Name: 5, dtype: object

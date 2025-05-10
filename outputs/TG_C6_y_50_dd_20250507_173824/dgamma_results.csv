@@ -1,0 +1,8 @@
+complexity,loss,score,equation,sympy_format,lambda_format
+1,0.9970129,0.0,theta,theta,PySRFunction(X=>theta)
+2,0.9959184,0.001098382177085262,square(gamma_),gamma_**2,PySRFunction(X=>gamma_**2)
+3,0.9920256,0.0039164131139917515,(0.0020697522 * v_surge),0.0020697522*v_surge,PySRFunction(X=>0.0020697522*v_surge)
+4,0.9919067,0.00011986296119301692,sin(0.0020697522 * v_surge),sin(0.0020697522*v_surge),PySRFunction(X=>sin(0.0020697522*v_surge))
+5,0.99080026,0.001116090412931055,((0.0020697522 * v_surge) - -0.03417522),0.0020697522*v_surge + 0.03417522,PySRFunction(X=>0.0020697522*v_surge + 0.03417522)
+6,0.99064153,0.0001602166676211325,sin((0.0020697522 * v_surge) - -0.03417522),sin(0.0020697522*v_surge + 0.03417522),PySRFunction(X=>sin(0.0020697522*v_surge + 0.03417522))
+7,0.99052274,0.00011991938471855675,sin(sin((0.0020697522 * v_surge) - -0.03417522)),sin(sin(0.0020697522*v_surge + 0.03417522)),PySRFunction(X=>sin(sin(0.0020697522*v_surge + 0.03417522)))

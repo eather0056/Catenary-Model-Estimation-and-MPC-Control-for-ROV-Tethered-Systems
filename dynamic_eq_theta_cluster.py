@@ -24,7 +24,7 @@ from collections import defaultdict
 
 # === Define The Run Name ===
 # This is the name of the run that will be used in W&B and the output directory.
-Run_Name = "TG_C6_al_50_F"
+Run_Name = "TG_C6_al_2k_dd"
 
 # === Set the timestamp for the run ===
 # This will be used to create unique filenames for the output files.
@@ -55,7 +55,7 @@ wandb.init(
     config={
         "model": "PySR",
         "task": "Damped Catenary Dynamics",
-        "niterations": 50,
+        "niterations": 2000,
         "binary_operators": ["+", "-", "*", "/"],  # Protected division
         "unary_operators": unary_ops,
         "loss": "loss(x, y) = (x - y)^2 + 0.01 * abs(x)",
@@ -68,13 +68,13 @@ wandb.init(
             "exp": {"exp": 0}      # No nested exponentials
         },
         "batching": True,
-        "batch_size": 10000,
+        "batch_size": 15000,
         "random_state": 42,
-        "maxsize": 25,
+        "maxsize": 30,
         "procs": 0,
-        "verbosity": 2,
+        "verbosity": 1,
         "deterministic": True,
-        "model_selection": "accuracy",
+        "model_selection": "best",
     }
 )
 
@@ -184,10 +184,16 @@ model_dtheta_dt.fit(
         "theta_v_surge",        # [rad·m/s]
         "v_surge",              # [m/s]
         "v_surge_sq_l",         # [m/s²]
-        "T_l",                  # [kg/s²]
-        "sin_theta",            # [dimensionless]
-        "delta_H_l",            # [dimensionless]
-        "torque" ,            # [rad/s²]
+        "theta",            # [rad]
+        "gamma_",             # [rad]
+        "gamma_v_sway_l",      # [rad/s]
+        "v_sway_l",            # [1/s]
+        "gamma_v_sway",        # [rad·m/s]
+        "v_sway",              # [m/s]
+        # "theta_prev",
+        # "gamma_prev",
+        "dtheta",
+        "dgamma",
     ]
 )
 
@@ -207,9 +213,16 @@ model_dgamma_dt.fit(
         "gamma_v_sway",        # [rad·m/s]
         "v_sway",              # [m/s]
         "v_sway_sq_l",         # [m/s²]
-        "T_l",                  # [kg/s²]
-        "sin_gamma",            # [dimensionless]
-        "torque" ,            # [rad/s²]
+        "theta",                # [rad]
+        "gamma_",              # [rad]
+        "theta_v_surge_l",      # [rad/s]
+        "v_surge_l",            # [1/s]
+        "theta_v_surge",        # [rad·m/s]
+        "v_surge",              # [m/s]
+        # "theta_prev",
+        # "gamma_prev",
+        "dtheta",
+        "dgamma",
     ]
 )
 model_dgamma_dt._finished = True
@@ -243,25 +256,58 @@ X_test_gamma_scaled = scaler_gamma.fit_transform(X_test_gamma)
 
 time = df_test["Time"].values
 
-# === Predict Derivatives ===
-dtheta_pred = model_dtheta_dt.predict(X_test_theta_scaled) * theta_std + theta_mean
-dgamma_pred = model_dgamma_dt.predict(X_test_gamma_scaled) * gamma_std + gamma_mean
+# # === Predict Derivatives ===
+# dtheta_pred = model_dtheta_dt.predict(X_test_theta_scaled) * theta_std + theta_mean
+# dgamma_pred = model_dgamma_dt.predict(X_test_gamma_scaled) * gamma_std + gamma_mean
 
-# === Integrate to Estimate Theta and Gamma ===
-theta_est = np.zeros_like(dtheta_pred)
-gamma_est = np.zeros_like(dgamma_pred)
+# # === Integrate to Estimate Theta and Gamma ===
+# theta_est = np.zeros_like(dtheta_pred)
+# gamma_est = np.zeros_like(dgamma_pred)
+# theta_est[0] = df_test["Theta"].values[0]
+# gamma_est[0] = df_test["Gamma"].values[0]
+
+# for i in range(1, len(time)):
+#     dt = time[i] - time[i - 1]
+#     theta_est[i] = theta_est[i - 1] + dtheta_pred[i - 1] * dt
+#     gamma_est[i] = gamma_est[i - 1] + dgamma_pred[i - 1] * dt
+
+# theta_true = df_test["Theta"].values
+# gamma_true = df_test["Gamma"].values
+# theta_error = theta_true - theta_est
+# gamma_error = gamma_true - gamma_est
+
+
+# === Second Derivative is Given ===
+ddtheta_pred = model_dtheta_dt.predict(X_test_theta_scaled) * theta_std + theta_mean
+ddgamma_pred = model_dgamma_dt.predict(X_test_gamma_scaled) * gamma_std + gamma_mean
+
+# === First Derivative Initialization (Velocity) ===
+theta_dot = np.zeros_like(ddtheta_pred)
+gamma_dot = np.zeros_like(ddgamma_pred)
+
+# === First Integration: Angular Velocities ===
+for i in range(1, len(time)):
+    dt = time[i] - time[i - 1]
+    theta_dot[i] = theta_dot[i - 1] + ddtheta_pred[i - 1] * dt
+    gamma_dot[i] = gamma_dot[i - 1] + ddgamma_pred[i - 1] * dt
+
+# === Second Integration: Angular Positions ===
+theta_est = np.zeros_like(ddtheta_pred)
+gamma_est = np.zeros_like(ddgamma_pred)
 theta_est[0] = df_test["Theta"].values[0]
 gamma_est[0] = df_test["Gamma"].values[0]
 
 for i in range(1, len(time)):
     dt = time[i] - time[i - 1]
-    theta_est[i] = theta_est[i - 1] + dtheta_pred[i - 1] * dt
-    gamma_est[i] = gamma_est[i - 1] + dgamma_pred[i - 1] * dt
+    theta_est[i] = theta_est[i - 1] + theta_dot[i - 1] * dt
+    gamma_est[i] = gamma_est[i - 1] + gamma_dot[i - 1] * dt
 
+# === Compare with Ground Truth ===
 theta_true = df_test["Theta"].values
 gamma_true = df_test["Gamma"].values
 theta_error = theta_true - theta_est
 gamma_error = gamma_true - gamma_est
+
 
 log_scatter_plot(theta_true, theta_est, "dTheta_dt", output_dir)
 log_scatter_plot(gamma_true, gamma_est, "dGamma_dt", output_dir)

@@ -1,0 +1,7 @@
+complexity, loss     , score                , equation                               , sympy_format                     , lambda_format
+         1, 4.664711 , 0.0                  , -3.9431085e-5                          , -3.94310850000000e-5             , PySRFunction(X=>-0.0000394310850000000)
+         3, 4.6594334, 0.0005660144606510436, (-0.11269224 * a_surge)                , -0.11269224*a_surge              , PySRFunction(X=>-0.11269224*a_surge)
+         4, 4.6387477, 0.004449415192984854 , (sin(theta) * -0.2580562)              , -0.2580562*sin(theta)            , PySRFunction(X=>-0.2580562*sin(theta))
+         5, 4.638733 , 3.168963746701548e-06, tanh(-0.26198503 * sin(theta))         , -tanh(0.26198503*sin(theta))     , PySRFunction(X=>-tanh(0.26198503*sin(theta)))
+         6, 4.634653 , 0.0008799375467081587, sin((-0.15883707 / 0.8781496) * theta) , -sin(0.18087700546695*theta)     , PySRFunction(X=>-sin(0.18087700546695*theta))
+         7, 3.9638753, 0.1563391732090478   , (tanh(sin(theta) * 0.8613248) * dtheta), dtheta*tanh(0.8613248*sin(theta)), PySRFunction(X=>dtheta*tanh(0.8613248*sin(theta)))

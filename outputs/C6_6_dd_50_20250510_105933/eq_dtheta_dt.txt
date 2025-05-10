@@ -1,0 +1,7 @@
+complexity                                        4
+loss                                       3.832766
+score                                      0.183864
+equation                      (sin(theta) * dtheta)
+sympy_format                      dtheta*sin(theta)
+lambda_format    PySRFunction(X=>dtheta*sin(theta))
+Name: 2, dtype: object

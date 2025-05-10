@@ -1,0 +1,10 @@
+Complexity,Loss,Equation
+1,0.99927366,"theta"
+2,0.99903095,"square(gamma_)"
+3,0.99754745,"(gamma_ * -0.6864096)"
+4,0.9973716,"(gamma_ * sin(-0.6864096))"
+5,0.99566746,"((gamma_ * -1.1124387) / l)"
+6,0.99378616,"((gamma_ * -1.1124387) / square(l))"
+10,0.99359596,"((cos(cos(theta)) - neg(-0.62253505)) + (gamma_ * -1.1124387))"
+13,0.9934998,"((cos(cos(square(dgamma) - theta)) - neg(-0.62253505)) + (gamma_ * -1.1124387))"
+24,0.9897003,"square(sin(sin(square(square(neg(neg((square(sin(gamma_) / cos(dgamma)) / cos(dgamma)) / -0.08345059)) - theta) * cos(square(0.90386176))))))"

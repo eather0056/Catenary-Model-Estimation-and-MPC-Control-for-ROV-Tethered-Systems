@@ -1,0 +1,7 @@
+complexity                                                       7
+loss                                                      3.963875
+score                                                     0.156339
+equation                   (tanh(sin(theta) * 0.8613248) * dtheta)
+sympy_format                     dtheta*tanh(0.8613248*sin(theta))
+lambda_format    PySRFunction(X=>dtheta*tanh(0.8613248*sin(thet...
+Name: 5, dtype: object

@@ -1,0 +1,8 @@
+Complexity,Loss,Equation
+1,1.0,"-2.1311007e-6"
+2,0.99729633,"neg(theta)"
+4,0.9968998,"(square(dgamma) - theta)"
+5,0.99689746,"(square(dgamma) - sin(theta))"
+6,0.99681616,"(square(dgamma * 1.3676407) - theta)"
+7,0.9968112,"(square(dgamma * 1.3676407) - sin(theta))"
+9,0.9966579,"(square((dgamma * 1.3676407) - -0.024814704) - sin(theta))"

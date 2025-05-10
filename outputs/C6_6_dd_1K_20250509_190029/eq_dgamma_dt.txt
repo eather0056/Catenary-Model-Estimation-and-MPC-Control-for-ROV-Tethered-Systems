@@ -1,0 +1,7 @@
+complexity                                                      10
+loss                                                      0.259843
+score                                                     0.088773
+equation         ((0.05515111 * (-0.50034815 * theta)) * square...
+sympy_format        -0.0275947558589465*theta*(dgamma + dtheta)**2
+lambda_format    PySRFunction(X=>-0.0275947558589465*theta*(dga...
+Name: 8, dtype: object
