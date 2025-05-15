@@ -1,0 +1,7 @@
+complexity                                               6
+loss                                              3.619046
+score                                             0.081761
+equation                      (dtheta * cos(a_z - v_sway))
+sympy_format                      dtheta*cos(a_z - v_sway)
+lambda_format    PySRFunction(X=>dtheta*cos(a_z - v_sway))
+Name: 4, dtype: object

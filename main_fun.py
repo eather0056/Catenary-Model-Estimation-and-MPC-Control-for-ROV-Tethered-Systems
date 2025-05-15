@@ -861,7 +861,6 @@ def features_dd(df):
         a_x.reshape(-1, 1),
         a_y.reshape(-1, 1),
         a_z.reshape(-1, 1),
-        l,
     ])
 
     targets = np.hstack([

@@ -1,0 +1,9 @@
+Complexity,Loss,Equation
+1,0.40546307,"-4.3833353e-8"
+3,0.38484246,"(-0.14360073 * a_y)"
+10,0.3783372,"(gama * (square(a_sway) * (square(square(-0.55653816)) * -0.091971956)))"
+11,0.3770767,"(gama * sin(square(a_sway) * (square(square(-0.55653816)) * -0.091971956)))"
+12,0.37670755,"(gama * sin(sin(square(a_sway) * (square(square(-0.55653816)) * -0.091971956))))"
+15,0.37634283,"((gama + dgamma) * (square(abs(a_sway + -1.1052903)) * (square(square(-0.55653816)) * -0.091971956)))"
+16,0.3763428,"((gama + dgamma) * (square(abs(a_sway + -1.1052903)) * sin(square(square(-0.55653816)) * -0.091971956)))"
+17,0.37631172,"((gama + dgamma) * ((square(a_sway + -1.1052903) + -0.12918821) * (square(abs(square(-0.55653816))) * -0.091971956)))"

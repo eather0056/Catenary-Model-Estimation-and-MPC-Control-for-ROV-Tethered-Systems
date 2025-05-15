@@ -27,30 +27,30 @@ from numpy import cumsum
 
 # === Define The Run Name ===
 # This is the name of the run that will be used in W&B and the output directory.
-Run_Name = "C6_all_dd_1k_nf"
+Run_Name = "dd_C6_all_50_s"
 
 # === Set the timestamp for the run ===
 # This will be used to create unique filenames for the output files.
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 os.environ["JULIA_DEBUG"] = "all"
 
-unary_ops = ["sin", "cos", "abs", "square", "tanh"]
+unary_ops = ["sin"]
 
 wandb.init(
     project="Catenary_Dynamics_Differential",
     entity="eather0056",
     name=f"{Run_Name}_{timestamp}",
     tags=["symbolic", "dynamics", "nonlinear"],
-    notes="Tanning for theta/gamma symbolic equations, all cable 6 dataset used load type concatenate, feature used theta, gama, dtheta, dgamma, v_sway, v_surge, a_sway, a_surge, V_x, V_y, V_z, a_x, a_y, a_z, l.",
+    notes="Tanning for theta/gamma symbolic equations, all cable 6 dataset used load type concatenate, feature used theta, gama, dtheta, dgamma, v_sway, v_surge, a_sway, a_surge, V_x, V_y, V_z, a_x, a_y, a_z.",
     config={
         "model": "PySR",
         "task": "Differential Equation Discovery",
-        "niterations": 1000,
+        "niterations": 50,
         "binary_operators": ["+", "-", "*", "/"],
         # "complexity_of_operators": {"/": 5, "square": 2, "tanh": 3, "sin": 2, "cos": 2},
         "unary_operators": unary_ops,
         "batching": True,
-        "batch_size": 10000,
+        "batch_size": 15000,
         "random_state": 42,
         "maxsize": 30,
         "procs": 0,
@@ -166,7 +166,6 @@ model_dtheta_dt.fit(
         "a_x",
         "a_y",
         "a_z",
-        "l",
     ],
 )
 model_dtheta_dt._finished = True
@@ -188,7 +187,6 @@ model_dgamma_dt.fit(
         "a_x",
         "a_y",
         "a_z",
-        "l",
     ],
 )
 model_dgamma_dt._finished = True

@@ -13,12 +13,12 @@ from numpy import cumsum
 # pathlib.PosixPath = pathlib.WindowsPath
 
 # === Define The Run Name ===
-ranname = "C6_6_dd_1K_20250509_190029"
+ranname = "dd_C6_all_50_s_20250511_013928"
 # === Load Models and Scaler ===
-model_theta = joblib.load("outputs/C6_6_dd_1K_20250509_190029/model_dtheta_dt.pkl")  
-model_gamma = joblib.load("outputs/C6_6_dd_1K_20250509_190029/model_dgamma_dt.pkl")  
-scaler_theta = joblib.load("outputs/C6_6_dd_1K_20250509_190029/scaler.pkl")  
-scaler_gamma = joblib.load("outputs/C6_6_dd_1K_20250509_190029/scaler.pkl")
+model_theta = joblib.load("outputs/dd_C6_all_50_s_20250511_013928/model_dtheta_dt.pkl")  
+model_gamma = joblib.load("outputs/dd_C6_all_50_s_20250511_013928/model_dgamma_dt.pkl")  
+scaler_theta = joblib.load("outputs/dd_C6_all_50_s_20250511_013928/scaler.pkl")  
+scaler_gamma = joblib.load("outputs/dd_C6_all_50_s_20250511_013928/scaler.pkl")
 
 # Cable parameters from experimental setup (Table I for cable 6)
 L = 3.0  # [m]
@@ -51,8 +51,8 @@ time = df["Time"].values
 
 
 # === Choose Specific Equation by Index or Filter Criteria ===
-selected_eq_theta = model_theta.equations_[model_theta.equations_["complexity"] == 1].iloc[0]
-selected_eq_gamma = model_gamma.equations_[model_gamma.equations_["complexity"] == 1].iloc[0]
+selected_eq_theta = model_theta.equations_[model_theta.equations_["complexity"] == 21].iloc[0]
+selected_eq_gamma = model_gamma.equations_[model_gamma.equations_["complexity"] == 17].iloc[0]
 
 # Print selected equations
 print(f"\n[Custom] eq_dtheta_dt: {selected_eq_theta['equation']}")
@@ -84,8 +84,8 @@ gamma_dot = np.zeros_like(dgamma_pred)
 # === First Integration: Angular Velocities ===
 for i in range(1, len(time)):
     dt = time[i] - time[i - 1]
-    theta_dot[i] = theta_dot[i - 1] + dtheta_pred[i - 1] * dt
-    gamma_dot[i] = gamma_dot[i - 1] + dgamma_pred[i - 1] * dt
+    theta_dot[i] = theta_dot[i - 1] + dtheta_pred[i - 22] * dt
+    gamma_dot[i] = gamma_dot[i - 1] + dgamma_pred[i - 21] * dt
 
 # === Second Integration: Angular Positions ===
 theta_est = np.zeros_like(dtheta_pred)

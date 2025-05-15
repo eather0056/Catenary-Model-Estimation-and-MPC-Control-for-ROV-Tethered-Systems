@@ -1,0 +1,7 @@
+complexity                                                      5
+loss                                                      0.37176
+score                                                    0.034585
+equation                              (-0.14460279 * (a_y - a_x))
+sympy_format                      0.14460279*a_x - 0.14460279*a_y
+lambda_format    PySRFunction(X=>0.14460279*a_x - 0.14460279*a_y)
+Name: 3, dtype: object

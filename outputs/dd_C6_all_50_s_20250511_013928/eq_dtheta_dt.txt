@@ -1,0 +1,7 @@
+complexity                                                      6
+loss                                                     3.648567
+score                                                    0.076973
+equation                      (sin(a_surge + 0.6155493) * dtheta)
+sympy_format                      dtheta*sin(a_surge + 0.6155493)
+lambda_format    PySRFunction(X=>dtheta*sin(a_surge + 0.6155493))
+Name: 4, dtype: object

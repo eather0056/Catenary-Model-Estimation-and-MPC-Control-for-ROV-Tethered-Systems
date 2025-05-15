@@ -1,0 +1,7 @@
+complexity                                      4
+loss                                      3.93827
+score                                    0.070571
+equation                      (cos(a_z) * dtheta)
+sympy_format                      dtheta*cos(a_z)
+lambda_format    PySRFunction(X=>dtheta*cos(a_z))
+Name: 2, dtype: object
