@@ -11,14 +11,21 @@ from scipy.integrate import cumulative_trapezoid
 from numpy import cumsum
 
 # pathlib.PosixPath = pathlib.WindowsPath
-
 # === Define The Run Name ===
-ranname = "dd_C6_all_50_s_20250511_013928"
+ranname = "final_test_dd_C6"
 # === Load Models and Scaler ===
-model_theta = joblib.load("outputs/dd_C6_all_50_s_20250511_013928/model_dtheta_dt.pkl")  
-model_gamma = joblib.load("outputs/dd_C6_all_50_s_20250511_013928/model_dgamma_dt.pkl")  
-scaler_theta = joblib.load("outputs/dd_C6_all_50_s_20250511_013928/scaler.pkl")  
-scaler_gamma = joblib.load("outputs/dd_C6_all_50_s_20250511_013928/scaler.pkl")
+model_theta = joblib.load("outputs/dd_C6_all_50_ld_20250617_152853/model_dtheta_dt.pkl")  
+model_gamma = joblib.load("outputs/dd_C6_Y_1k_ld_20250617_193707/model_dgamma_dt.pkl")  
+scaler_theta = joblib.load("outputs/dd_C6_all_50_ld_20250617_152853/scaler.pkl")  
+scaler_gamma = joblib.load("outputs/dd_C6_Y_1k_ld_20250617_193707/scaler.pkl")
+
+# # === Define The Run Name ===
+# ranname = "dd_C6_All_1k_A_20250621_133535"
+# # === Load Models and Scaler ===
+# model_theta = joblib.load("outputs/dd_C6_All_1k_A_20250621_133535/model_dtheta_dt.pkl")  
+# model_gamma = joblib.load("outputs/dd_C6_All_1k_A_20250621_133535/model_dgamma_dt.pkl")  
+# scaler_theta = joblib.load("outputs/dd_C6_All_1k_A_20250621_133535/scaler.pkl")  
+# scaler_gamma = joblib.load("outputs/dd_C6_All_1k_A_20250621_133535/scaler.pkl")
 
 # Cable parameters from experimental setup (Table I for cable 6)
 L = 3.0  # [m]
@@ -26,7 +33,7 @@ cable_wet_weight = 1.521  # [N] (From Table I, cable 6: wet weight=1.521N)
 
 
 # === Load and Preprocess Dataset ===
-file_name = "L_dynamique6y200dis1_0024.csv"
+file_name = "L_dynamique6y200dis1_0025.csv"
 
 output_dir = "Results/mode_test"
 output_path = pathlib.Path(output_dir)
@@ -52,7 +59,7 @@ time = df["Time"].values
 
 # === Choose Specific Equation by Index or Filter Criteria ===
 selected_eq_theta = model_theta.equations_[model_theta.equations_["complexity"] == 21].iloc[0]
-selected_eq_gamma = model_gamma.equations_[model_gamma.equations_["complexity"] == 17].iloc[0]
+selected_eq_gamma = model_gamma.equations_[model_gamma.equations_["complexity"] == 23].iloc[0]
 
 # Print selected equations
 print(f"\n[Custom] eq_dtheta_dt: {selected_eq_theta['equation']}")
@@ -77,28 +84,49 @@ dgamma_pred = predict_gamma_custom(X_scaled_gamma)
 # dgamma_pred = model_gamma.predict(X_scaled_gamma)
 
 
-# === First Derivative Initialization (Velocity) ===
-theta_dot = np.zeros_like(dtheta_pred)
-gamma_dot = np.zeros_like(dgamma_pred)
+# # === First Derivative Initialization (Velocity) ===
+# theta_dot = np.zeros_like(dtheta_pred)
+# gamma_dot = np.zeros_like(dgamma_pred)
 
-# === First Integration: Angular Velocities ===
-for i in range(1, len(time)):
-    dt = time[i] - time[i - 1]
-    theta_dot[i] = theta_dot[i - 1] + dtheta_pred[i - 22] * dt
-    gamma_dot[i] = gamma_dot[i - 1] + dgamma_pred[i - 21] * dt
+# # === First Integration: Angular Velocities ===
+# for i in range(1, len(time)):
+#     dt = time[i] - time[i - 1]
+#     theta_dot[i] = theta_dot[i - 1] + dtheta_pred[i - 22] * dt
+#     gamma_dot[i] = gamma_dot[i - 1] + dgamma_pred[i - 21] * dt
 
-# === Second Integration: Angular Positions ===
-theta_est = np.zeros_like(dtheta_pred)
-gamma_est = np.zeros_like(dgamma_pred)
-theta_est[0] = df["Theta"].values[0]
-gamma_est[0] = df["Gamma"].values[0]
+# # === Second Integration: Angular Positions ===
+# theta_est = np.zeros_like(dtheta_pred)
+# gamma_est = np.zeros_like(dgamma_pred)
+# theta_est[0] = df["Theta"].values[0]
+# gamma_est[0] = df["Gamma"].values[0]
 
-for i in range(1, len(time)):
-    dt = time[i] - time[i - 1]
-    theta_est[i] = theta_est[i - 1] + theta_dot[i - 1] * dt
-    gamma_est[i] = gamma_est[i - 1] + gamma_dot[i - 1] * dt
+# for i in range(1, len(time)):
+#     dt = time[i] - time[i - 1]
+#     theta_est[i] = theta_est[i - 1] + theta_dot[i - 1] * dt
+#     gamma_est[i] = gamma_est[i - 1] + gamma_dot[i - 1] * dt
 
-# === Compare with Ground Truth ===
+# # === Compare with Ground Truth ===
+# theta_error = theta_true - theta_est
+# gamma_error = gamma_true - gamma_est
+
+# Align time array with model output shape
+lags=2
+time_valid = df["Time"].values[lags:]
+theta_0 = df["Theta"].values[lags]
+gamma_0 = df["Gamma"].values[lags]
+
+# 1st integration
+dtheta_pred = cumulative_trapezoid(dtheta_pred, time_valid, initial=0)
+dgamma_pred = cumulative_trapezoid(dgamma_pred, time_valid, initial=0)
+
+# 2nd integration
+theta_est = theta_0 + cumulative_trapezoid(dtheta_pred, time_valid, initial=0)
+gamma_est = gamma_0 + cumulative_trapezoid(dgamma_pred, time_valid, initial=0)
+
+# Ground truth
+theta_true = df["Theta"].values[lags:]
+gamma_true = df["Gamma"].values[lags:]
+
 theta_error = theta_true - theta_est
 gamma_error = gamma_true - gamma_est
 
@@ -122,30 +150,30 @@ print(f"R² Score for Gamma(t): {r2_score(gamma_true, gamma_est):.4f}")
 plt.figure(figsize=(14, 8))
 
 plt.subplot(4, 2, 1)
-plt.plot(time, theta_true, label="True Theta", color="blue")
-plt.plot(time, theta_est, '--', label="Predicted Theta", color="red")
+plt.plot(time_valid, theta_true, label="True Theta", color="blue")
+plt.plot(time_valid, theta_est, '--', label="Predicted Theta", color="red")
 plt.ylabel("Theta (rad)")
 plt.title("Theta(t) Prediction")
 plt.legend()
 plt.grid()
 
 plt.subplot(4, 2, 2)
-plt.plot(time, gamma_true, label="True Gamma", color="blue")
-plt.plot(time, gamma_est, '--', label="Predicted Gamma", color="red")
+plt.plot(time_valid, gamma_true, label="True Gamma", color="blue")
+plt.plot(time_valid, gamma_est, '--', label="Predicted Gamma", color="red")
 plt.ylabel("Gamma (rad)")
 plt.title("Gamma(t) Prediction")
 plt.legend()
 plt.grid()
 
 plt.subplot(4, 2, 3)
-plt.plot(time, theta_error, label="Theta Error", color="purple")
+plt.plot(time_valid, theta_error, label="Theta Error", color="purple")
 plt.title("Theta(t)  Estimation Error")
 plt.legend()
 plt.ylabel("Error (rad)")
 plt.xlabel("Time (s)")
 
 plt.subplot(4, 2, 4)
-plt.plot(time, gamma_error, label="Gamma Error", color="orange")
+plt.plot(time_valid, gamma_error, label="Gamma Error", color="orange")
 plt.title("Gamma(t)  Estimation Error")
 plt.ylabel("Error (rad)")
 plt.xlabel("Time (s)")
@@ -155,14 +183,14 @@ theta_percentage_error = (theta_error / theta_true) * 100
 gamma_percentage_error = (gamma_error / gamma_true) * 100
 
 plt.subplot(4, 2, 5)
-plt.plot(time, theta_percentage_error, label="Theta % Error", color="purple")
+plt.plot(time_valid, theta_percentage_error, label="Theta % Error", color="purple")
 plt.title("Theta(t) Estimation Percentage Error")
 plt.legend()
 plt.ylabel("Percentage Error (%)")
 plt.xlabel("Time (s)")
 
 plt.subplot(4, 2, 6)
-plt.plot(time, gamma_percentage_error, label="Gamma % Error", color="orange")
+plt.plot(time_valid, gamma_percentage_error, label="Gamma % Error", color="orange")
 plt.title("Gamma(t)  Estimation Percentage Error")
 plt.ylabel("Percentage Error (%)")
 plt.xlabel("Time (s)")
@@ -170,7 +198,7 @@ plt.legend()
 
 plt.subplot(4, 2, 7)
 plt.plot(time, y_dtheta_dt, label="True ddTheta", color="blue")
-plt.plot(time, dtheta_pred, '--', label="Predicted ddTheta", color="red")
+plt.plot(time_valid, dtheta_pred, '--', label="Predicted ddTheta", color="red")
 plt.ylabel("ddTheta (rad/s)")
 plt.title("ddt Theta(t) Prediction")
 plt.legend()
@@ -178,7 +206,7 @@ plt.grid()
 
 plt.subplot(4, 2, 8)
 plt.plot(time, y_dgamma_dt, label="True ddGamma", color="blue")
-plt.plot(time, dgamma_pred, '--', label="Predicted ddGamma", color="red")
+plt.plot(time_valid, dgamma_pred, '--', label="Predicted ddGamma", color="red")
 plt.ylabel("ddGamma (rad/s)")
 plt.title("ddt Gamma(t) Prediction")
 plt.legend()
@@ -186,7 +214,7 @@ plt.grid()
 
 
 plt.tight_layout()
-plt.savefig(os.path.join(output_dir, f"predictions_{file_name}.png"))
+plt.savefig(os.path.join(output_dir, f"{ranname}_predictions_{file_name}.png"))
 
 
 # === Scatter Plot: Pred vs True ===
@@ -214,8 +242,8 @@ for idx, row in model_theta.equations_.iterrows():
     eq_func = row["lambda_format"]  # use directly
     dtheta_pred = eq_func(X_scaled_theta)
 
-    theta_dot = cumulative_trapezoid(dtheta_pred, time, initial=0)
-    theta_est = cumulative_trapezoid(theta_dot, time)
+    theta_dot = cumulative_trapezoid(dtheta_pred, time_valid, initial=0)
+    theta_est = cumulative_trapezoid(theta_dot, time_valid)
     theta_est = np.insert(theta_est, 0, theta_true[0])
 
 
@@ -228,8 +256,8 @@ for idx, row in model_gamma.equations_.iterrows():
     eq_func = row["lambda_format"]  # use directly
     dgamma_pred = eq_func(X_scaled_gamma)
 
-    gamma_dot = cumulative_trapezoid(dgamma_pred, time, initial=0)
-    gamma_est = cumulative_trapezoid(gamma_dot, time)
+    gamma_dot = cumulative_trapezoid(dgamma_pred, time_valid, initial=0)
+    gamma_est = cumulative_trapezoid(gamma_dot, time_valid)
     gamma_est = np.insert(gamma_est, 0, gamma_true[0])
 
 
@@ -245,3 +273,37 @@ for c, eq, r2 in theta_r2_scores:
 print("\nGamma R² Scores:")
 for c, eq, r2 in gamma_r2_scores:
     print(f"Complexity {c:2d} | R² = {r2:.4f} | {eq}")
+
+
+theta_r2_scores.append((row["complexity"], row["equation"], r2))
+gamma_r2_scores.append((row["complexity"], row["equation"], r2))
+
+# === Convert to DataFrames ===
+df_theta = pd.DataFrame(theta_r2_scores, columns=["complexity", "equation", "r2_score"])
+df_gamma = pd.DataFrame(gamma_r2_scores, columns=["complexity", "equation", "r2_score"])
+
+# === Optional: Keep best R² per complexity ===
+df_theta = df_theta.groupby("complexity", as_index=False).max()
+df_gamma = df_gamma.groupby("complexity", as_index=False).max()
+
+# === Pareto Frontier Plot ===
+plt.figure(figsize=(10, 6))
+plt.subplot(1, 2, 1)
+plt.plot(df_theta["complexity"], df_theta["r2_score"], label="Theta (ddθ)", marker="o", color="blue")
+plt.title("Complexity vs R² Score for Theta (ddθ)")
+plt.xlabel("Model Complexity")
+plt.ylabel("R² Score")
+plt.grid(True)
+
+plt.subplot(1, 2, 2)
+plt.plot(df_gamma["complexity"], df_gamma["r2_score"], label="Gamma (ddγ)", marker="o", color="orange")
+plt.title("Complexity vs R² Score for Gamma (ddγ)")
+plt.xlabel("Model Complexity")
+plt.ylabel("R² Score")
+plt.grid(True)
+plt.tight_layout()
+
+# Save the figure
+pareto_path = os.path.join(output_dir, f"{ranname}_pareto_frontier.png")
+plt.savefig(pareto_path)
+print(f"Pareto frontier plot saved to: {pareto_path}")

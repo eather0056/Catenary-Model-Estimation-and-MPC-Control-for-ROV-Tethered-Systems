@@ -1,0 +1,7 @@
+complexity                                                    8
+loss                                                   4.530302
+score                                                  0.012828
+equation                    (sin(sin(v_sway) * sin(V_x)) * a_z)
+sympy_format                      a_z*sin(sin(V_x)*sin(v_sway))
+lambda_format    PySRFunction(X=>a_z*sin(sin(V_x)*sin(v_sway)))
+Name: 4, dtype: object

@@ -1,0 +1,9 @@
+complexity,loss,score,equation,sympy_format,lambda_format
+1,4.664711,0.0,-3.800625e-5,-3.80062500000000e-5,PySRFunction(X=>-0.0000380062500000000)
+3,4.6084304,0.0060692799370030215,(0.19660093 * a_z),0.19660093*a_z,PySRFunction(X=>0.19660093*a_z)
+5,4.6077347,7.548692908300912e-05,(sin(sin(0.28524202)) * a_z),0.277690960376097*a_z,PySRFunction(X=>0.277690960376097*a_z)
+7,4.5887914,0.0020598350491965295,((0.7421206 + a_x) * (0.08683591 * a_z)),0.08683591*a_z*(a_x + 0.7421206),PySRFunction(X=>0.08683591*a_z*(a_x + 0.7421206))
+8,4.5303016,0.012828162207893477,(sin(sin(v_sway) * sin(V_x)) * a_z),a_z*sin(sin(V_x)*sin(v_sway)),PySRFunction(X=>a_z*sin(sin(V_x)*sin(v_sway)))
+11,4.4764314,0.003987449714246213,(sin((sin(v_sway) * a_surge) * (0.48002604 + 0.11112196)) * a_z),a_z*sin(0.591148*a_surge*sin(v_sway)),PySRFunction(X=>a_z*sin(0.591148*a_surge*sin(v_sway)))
+14,4.4314795,0.0033642217633132678,(sin((sin(v_sway) * (sin(V_x / 1.1142904) + a_surge)) * 0.5414546) * a_z),a_z*sin(0.5414546*(a_surge + sin(0.897432123618762*V_x))*sin(v_sway)),PySRFunction(X=>a_z*sin(0.5414546*(a_surge + sin(0.897432123618762*V_x))*sin(v_sway)))
+15,4.429958,0.00034339801300900465,(sin((sin(v_sway) * (sin(V_x / 1.1142904) + a_surge)) * sin(0.5414546)) * a_z),a_z*sin(0.515383070340967*(a_surge + sin(0.897432123618762*V_x))*sin(v_sway)),PySRFunction(X=>a_z*sin(0.515383070340967*(a_surge + sin(0.897432123618762*V_x))*sin(v_sway)))

@@ -1,0 +1,7 @@
+complexity                                      3
+loss                                     0.060607
+score                                    0.000091
+equation                      (5.702652e-6 / V_z)
+sympy_format                      5.702652e-6/V_z
+lambda_format    PySRFunction(X=>5.702652e-6/V_z)
+Name: 2, dtype: object

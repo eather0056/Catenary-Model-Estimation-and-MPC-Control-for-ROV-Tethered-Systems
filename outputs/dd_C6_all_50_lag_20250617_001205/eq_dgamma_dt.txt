@@ -1,0 +1,7 @@
+complexity                                                       8
+loss                                                       0.02843
+score                                                       0.2213
+equation         ((dgamma_t - dgamma_t_2) * abs(-0.34533635 * a...
+sympy_format        0.34533635*(dgamma_t - dgamma_t_2)*Abs(a_sway)
+lambda_format    PySRFunction(X=>0.34533635*(dgamma_t - dgamma_...
+Name: 6, dtype: object

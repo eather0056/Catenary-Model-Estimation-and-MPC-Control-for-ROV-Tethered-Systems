@@ -1,0 +1,7 @@
+complexity                                          3
+loss                                         0.040926
+score                                        0.150744
+equation                      (a_surge * 0.120002486)
+sympy_format                      0.120002486*a_surge
+lambda_format    PySRFunction(X=>0.120002486*a_surge)
+Name: 1, dtype: object

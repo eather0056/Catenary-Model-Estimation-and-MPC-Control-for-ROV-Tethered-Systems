@@ -27,30 +27,30 @@ from numpy import cumsum
 
 # === Define The Run Name ===
 # This is the name of the run that will be used in W&B and the output directory.
-Run_Name = "dd_C6_all_50_s"
+Run_Name = "dd_C6_All_1k_A"
 
 # === Set the timestamp for the run ===
 # This will be used to create unique filenames for the output files.
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 os.environ["JULIA_DEBUG"] = "all"
 
-unary_ops = ["sin"]
+unary_ops = [ "tanh", "sin"] #"cos", "abs", "square", "sign", "floor", "ceil"
 
 wandb.init(
     project="Catenary_Dynamics_Differential",
     entity="eather0056",
     name=f"{Run_Name}_{timestamp}",
     tags=["symbolic", "dynamics", "nonlinear"],
-    notes="Tanning for theta/gamma symbolic equations, all cable 6 dataset used load type concatenate, feature used theta, gama, dtheta, dgamma, v_sway, v_surge, a_sway, a_surge, V_x, V_y, V_z, a_x, a_y, a_z.",
+    notes="Tanning for theta/gamma symbolic equations, all cable 6 dataset used load type concatenate, feature used theta_t, theta_t_1, theta_t_2, gamma_t, gamma_t_1, gamma_t_2, dtheta_t, dtheta_t_1, dtheta_t_2, dgamma_t, dgamma_t_1, dgamma_t_2, # v_sway, v_surge, a_sway, a_surge, # V_x, V_y, V_z, # a_x, a_y, a_z, l",
     config={
         "model": "PySR",
         "task": "Differential Equation Discovery",
-        "niterations": 50,
+        "niterations": 1000,
         "binary_operators": ["+", "-", "*", "/"],
         # "complexity_of_operators": {"/": 5, "square": 2, "tanh": 3, "sin": 2, "cos": 2},
         "unary_operators": unary_ops,
         "batching": True,
-        "batch_size": 15000,
+        "batch_size": 10000,
         "random_state": 42,
         "maxsize": 30,
         "procs": 0,
@@ -84,7 +84,6 @@ common_params = dict(
     },
 
 )
-
 
 # === Set up output directory ===
 # This will be used to save the output files and models.
@@ -129,7 +128,9 @@ df_test = load_and_concat(test_files)
 
 
 # X_train = extract_features(df_train)
-X_train, targets = features_dd(df_train)
+# X_train, targets = features_dd(df_train)
+X_train, targets = features_dd(df_train, lags=2)
+
 
 # Split into targets for thetä and gammä
 target_theta_ddot = targets[:, 0]
@@ -157,15 +158,23 @@ print("Training model for dTheta/dt...")
 model_dtheta_dt.fit(
     X_train_scaled,
     target_theta_ddot,
+    # variable_names=[
+    #     # "theta", "gama", "dtheta", "dgamma",
+    #     "v_sway", "v_surge", "a_sway", "a_surge",
+    #     "V_x",
+    #     "V_y",
+    #     "V_z",
+    #     "a_x",
+    #     "a_y",
+    #     "a_z",
+    # ],
     variable_names=[
-        "theta", "gama", "dtheta", "dgamma", 
-        "v_sway", "v_surge", "a_sway", "a_surge",
-        "V_x",
-        "V_y",
-        "V_z",
-        "a_x",
-        "a_y",
-        "a_z",
+        "theta_t", "theta_t_1", "theta_t_2",
+        "gamma_t", "gamma_t_1", "gamma_t_2",
+        "dtheta_t", "dtheta_t_1", "dtheta_t_2",
+        "dgamma_t", "dgamma_t_1", "dgamma_t_2",
+        # "V_x", "V_y", "V_z",
+        "a_x", "a_y", "a_z",
     ],
 )
 model_dtheta_dt._finished = True
@@ -178,15 +187,23 @@ print("Training model for dGamma/dt...")
 model_dgamma_dt.fit(
     X_train_scaled,
     target_gamma_ddot,
+    # variable_names=[
+    #     # "theta", "gama", "dtheta", "dgamma", 
+    #     "v_sway", "v_surge", "a_sway", "a_surge",
+    #     "V_x",
+    #     "V_y",
+    #     "V_z",
+    #     "a_x",
+    #     "a_y",
+    #     "a_z",
+    # ],
     variable_names=[
-        "theta", "gama", "dtheta", "dgamma", 
-        "v_sway", "v_surge", "a_sway", "a_surge",
-        "V_x",
-        "V_y",
-        "V_z",
-        "a_x",
-        "a_y",
-        "a_z",
+        "theta_t", "theta_t_1", "theta_t_2",
+        "gamma_t", "gamma_t_1", "gamma_t_2",
+        "dtheta_t", "dtheta_t_1", "dtheta_t_2",
+        "dgamma_t", "dgamma_t_1", "dgamma_t_2",
+        # "V_x", "V_y", "V_z",
+        "a_x", "a_y", "a_z",
     ],
 )
 model_dgamma_dt._finished = True
@@ -209,7 +226,8 @@ joblib.dump(scaler, os.path.join(output_dir, f"scaler.pkl"))
 
 # === Save Predictions for Inspection ===
 # X_test = extract_features(df_test)
-X_test, _ = features_dd(df_test)
+# X_test, _ = features_dd(df_test)
+X_test, _ = features_dd(df_test, lags=2)
 X_scaled = scaler.transform(X_test)
 time = df_test["Time"].values
 
@@ -217,20 +235,39 @@ time = df_test["Time"].values
 ddtheta_pred = model_dtheta_dt.predict(X_scaled)
 ddgamma_pred = model_dgamma_dt.predict(X_scaled)
 
-# 1st integration — velocity
-dtheta_pred = cumulative_trapezoid(ddtheta_pred, time, initial=0)
-dgamma_pred = cumulative_trapezoid(ddgamma_pred, time, initial=0)
+# # 1st integration — velocity
+# dtheta_pred = cumulative_trapezoid(ddtheta_pred, time, initial=0)
+# dgamma_pred = cumulative_trapezoid(ddgamma_pred, time, initial=0)
 
-# 2nd integration — position using cumulative sum
-theta_est = df_test["Theta"].values[0] + cumsum(np.diff(time) * dtheta_pred[1:])
-gamma_est = df_test["Gamma"].values[0] + cumsum(np.diff(time) * dgamma_pred[1:])
+# # 2nd integration — position using cumulative sum
+# theta_est = df_test["Theta"].values[0] + cumsum(np.diff(time) * dtheta_pred[1:])
+# gamma_est = df_test["Gamma"].values[0] + cumsum(np.diff(time) * dgamma_pred[1:])
 
-# Pad to match length
-theta_est = np.insert(theta_est, 0, df_test["Theta"].values[0])
-gamma_est = np.insert(gamma_est, 0, df_test["Gamma"].values[0])
+# # Pad to match length
+# theta_est = np.insert(theta_est, 0, df_test["Theta"].values[0])
+# gamma_est = np.insert(gamma_est, 0, df_test["Gamma"].values[0])
 
-theta_true = df_test["Theta"].values
-gamma_true = df_test["Gamma"].values
+# theta_true = df_test["Theta"].values
+# gamma_true = df_test["Gamma"].values
+
+# Align time array with model output shape
+lags=2
+time_valid = df_test["Time"].values[lags:]
+theta_0 = df_test["Theta"].values[lags]
+gamma_0 = df_test["Gamma"].values[lags]
+
+# 1st integration
+dtheta_pred = cumulative_trapezoid(ddtheta_pred, time_valid, initial=0)
+dgamma_pred = cumulative_trapezoid(ddgamma_pred, time_valid, initial=0)
+
+# 2nd integration
+theta_est = theta_0 + cumulative_trapezoid(dtheta_pred, time_valid, initial=0)
+gamma_est = gamma_0 + cumulative_trapezoid(dgamma_pred, time_valid, initial=0)
+
+# Ground truth
+theta_true = df_test["Theta"].values[lags:]
+gamma_true = df_test["Gamma"].values[lags:]
+
 theta_error = theta_true - theta_est
 gamma_error = gamma_true - gamma_est
 

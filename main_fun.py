@@ -10,9 +10,6 @@ from scipy.optimize import root_scalar
 from scipy.signal import savgol_filter
 
 
-
-
-
 # ================================================================================================================
 # === Function For catenay Computation ===
 def rodrigues_rotation(vector: np.ndarray, axis: np.ndarray, angle_rad: float) -> np.ndarray:
@@ -869,3 +866,157 @@ def features_dd(df):
     ])
 
     return features, targets
+
+
+import numpy as np
+from scipy.ndimage import gaussian_filter1d
+
+def add_lag_features(x, lags=2):
+    """
+    Adds lagged versions of a 2D array x (shape: [n_samples, n_features]).
+    Returns concatenated array with original and lagged versions.
+    """
+    lagged = [x]
+    for lag in range(1, lags + 1):
+        lagged.append(np.roll(x, shift=lag, axis=0))
+    return np.hstack(lagged)
+
+def features_dd(df, lags=2):
+    time_array = df["Time"].values
+    P0 = df[["rod_end X", "rod_end Y", "rod_end Z"]].values / 1000
+    P1 = df[["robot_cable_attach_point X", "robot_cable_attach_point Y", "robot_cable_attach_point Z"]].values / 1000
+    V1 = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values / 1000
+
+    theta_raw = df["Theta"].values.reshape(-1, 1)
+    gamma_raw = df["Gamma"].values.reshape(-1, 1)
+
+    V_x = df["rob_cor_speed X"].values.reshape(-1, 1) / 1000
+    V_y = df["rob_cor_speed Y"].values.reshape(-1, 1) / 1000
+    V_z = df["rob_cor_speed Z"].values.reshape(-1, 1) / 1000
+
+    a_x = np.gradient(V_x.squeeze(), time_array).reshape(-1, 1)
+    a_y = np.gradient(V_y.squeeze(), time_array).reshape(-1, 1)
+    a_z = np.gradient(V_z.squeeze(), time_array).reshape(-1, 1)
+
+    theta_dot = np.gradient(theta_raw.squeeze(), time_array).reshape(-1, 1)
+    gamma_dot = np.gradient(gamma_raw.squeeze(), time_array).reshape(-1, 1)
+
+    # === Cable-relative features ===
+    rel_vec = P1 - P0
+    unit_rel = rel_vec / (np.linalg.norm(rel_vec, axis=1, keepdims=True) + 1e-8)
+    L = unit_rel
+    l = np.linalg.norm(rel_vec[:, :2], axis=1, keepdims=True)
+    v_surge = np.sum(V1 * unit_rel, axis=1, keepdims=True)
+    v_sway = np.linalg.norm(np.cross(V1, unit_rel), axis=1, keepdims=True)
+    a_surge = np.gradient(v_surge.squeeze(), time_array).reshape(-1, 1)
+    a_sway = np.gradient(v_sway.squeeze(), time_array).reshape(-1, 1)
+
+    # === Add lagged features ===
+    theta_lagged = add_lag_features(theta_raw, lags=lags)
+    gamma_lagged = add_lag_features(gamma_raw, lags=lags)
+    theta_dot_lagged = add_lag_features(theta_dot, lags=lags)
+    gamma_dot_lagged = add_lag_features(gamma_dot, lags=lags)
+
+    # === Concatenate all features ===
+    features = np.hstack([
+        theta_lagged,
+        gamma_lagged,
+        theta_dot_lagged,
+        gamma_dot_lagged,
+        # v_sway,
+        # v_surge,
+        # a_sway,
+        # a_surge,
+        # V_x, V_y, V_z,
+        a_x, a_y, a_z,
+        l,
+    ])
+
+    # === Compute smoothed targets ===
+    theta_ddot = gaussian_filter1d(
+        np.gradient(np.gradient(theta_raw.squeeze(), time_array), time_array),
+        sigma=3
+    ).reshape(-1, 1)
+    gamma_ddot = gaussian_filter1d(
+        np.gradient(np.gradient(gamma_raw.squeeze(), time_array), time_array),
+        sigma=3
+    ).reshape(-1, 1)
+    targets = np.hstack([theta_ddot, gamma_ddot])
+
+    # === Clip first `lags` rows to remove invalid lagged data ===
+    valid_start = lags
+    return features[valid_start:], targets[valid_start:]
+
+# import numpy as np
+# from scipy.ndimage import gaussian_filter1d
+
+# def add_lag_features(x, lags=2):
+#     lagged = [x]
+#     for lag in range(1, lags + 1):
+#         lagged.append(np.roll(x, shift=lag, axis=0))
+#     return np.hstack(lagged)
+
+# def features_dd(df, lags=2):
+#     time_array = df["Time"].values
+#     P0 = df[["rod_end X", "rod_end Y", "rod_end Z"]].values / 1000
+#     P1 = df[["robot_cable_attach_point X", "robot_cable_attach_point Y", "robot_cable_attach_point Z"]].values / 1000
+#     V1 = df[["rob_cor_speed X", "rob_cor_speed Y", "rob_cor_speed Z"]].values / 1000
+
+#     theta_raw = df["Theta"].values.reshape(-1, 1)
+#     gamma_raw = df["Gamma"].values.reshape(-1, 1)
+
+#     V_x = df["rob_cor_speed X"].values.reshape(-1, 1) / 1000
+#     V_y = df["rob_cor_speed Y"].values.reshape(-1, 1) / 1000
+#     V_z = df["rob_cor_speed Z"].values.reshape(-1, 1) / 1000
+#     V = np.hstack([V_x, V_y, V_z])
+
+#     a_x = np.gradient(V_x.squeeze(), time_array).reshape(-1, 1)
+#     a_y = np.gradient(V_y.squeeze(), time_array).reshape(-1, 1)
+#     a_z = np.gradient(V_z.squeeze(), time_array).reshape(-1, 1)
+#     A = np.hstack([a_x, a_y, a_z])
+
+#     theta_dot = np.gradient(theta_raw.squeeze(), time_array).reshape(-1, 1)
+#     gamma_dot = np.gradient(gamma_raw.squeeze(), time_array).reshape(-1, 1)
+
+#     # === Cable-relative features ===
+#     rel_vec = P1 - P0
+#     unit_rel = rel_vec / (np.linalg.norm(rel_vec, axis=1, keepdims=True) + 1e-8)
+#     l = np.linalg.norm(rel_vec[:, :2], axis=1, keepdims=True)
+
+#     # === Add lagged features ===
+#     theta_lagged = add_lag_features(theta_raw, lags=lags)
+#     gamma_lagged = add_lag_features(gamma_raw, lags=lags)
+#     theta_dot_lagged = add_lag_features(theta_dot, lags=lags)
+#     gamma_dot_lagged = add_lag_features(gamma_dot, lags=lags)
+
+#     # === New features: square of velocities and accelerations ===
+#     V_sq = V ** 2       # shape: [n, 3]
+#     A_sq = A ** 2       # shape: [n, 3]
+
+#     # === Cross product between velocity and acceleration vectors ===
+#     V_cross_A = np.cross(V, A)  # shape: [n, 3]
+
+#     # === Concatenate all features ===
+#     features = np.hstack([
+#         theta_lagged,
+#         gamma_lagged,
+#         theta_dot_lagged,
+#         gamma_dot_lagged,
+#         # V,
+#         A,
+#     ])
+
+#     # === Smoothed targets (second derivatives) ===
+#     theta_ddot = gaussian_filter1d(
+#         np.gradient(np.gradient(theta_raw.squeeze(), time_array), time_array),
+#         sigma=3
+#     ).reshape(-1, 1)
+#     gamma_ddot = gaussian_filter1d(
+#         np.gradient(np.gradient(gamma_raw.squeeze(), time_array), time_array),
+#         sigma=3
+#     ).reshape(-1, 1)
+#     targets = np.hstack([theta_ddot, gamma_ddot])
+
+#     # === Clip first `lags` rows ===
+#     valid_start = lags
+#     return features[valid_start:], targets[valid_start:]

@@ -1,0 +1,7 @@
+complexity                                                       7
+loss                                                      0.038947
+score                                                     0.090072
+equation                  (((a_y * theta_t_1) - a_x) * 0.07508047)
+sympy_format            -0.07508047*a_x + 0.07508047*a_y*theta_t_1
+lambda_format    PySRFunction(X=>-0.07508047*a_x + 0.07508047*a...
+Name: 4, dtype: object
