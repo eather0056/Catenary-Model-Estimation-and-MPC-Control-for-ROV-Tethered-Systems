@@ -1,0 +1,7 @@
+complexity                                                       9
+loss                                                      0.021502
+score                                                     0.124884
+equation         (0.14430158 * (((-0.34148005 * a_z) * gamma_t)...
+sympy_format       -0.14430158*a_y - 0.049276110753479*a_z*gamma_t
+lambda_format    PySRFunction(X=>-0.14430158*a_y - 0.0492761107...
+Name: 6, dtype: object
