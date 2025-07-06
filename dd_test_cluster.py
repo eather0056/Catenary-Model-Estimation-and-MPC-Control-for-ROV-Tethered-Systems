@@ -12,20 +12,20 @@ from numpy import cumsum
 
 # pathlib.PosixPath = pathlib.WindowsPath
 # # # === Define The Run Name ===
-ranname = "final_test_dd_C6"
-# === Load Models and Scaler ===
-model_theta = joblib.load("outputs/dd_C6_all_50_ld_20250617_152853/model_dtheta_dt.pkl")  
-model_gamma = joblib.load("outputs/dd_C6_Y_1k_ld_20250617_193707/model_dgamma_dt.pkl")  
-scaler_theta = joblib.load("outputs/dd_C6_all_50_ld_20250617_152853/scaler.pkl")  
-scaler_gamma = joblib.load("outputs/dd_C6_Y_1k_ld_20250617_193707/scaler.pkl")
+# ranname = "final_test_dd_C6"
+# # === Load Models and Scaler ===
+# model_theta = joblib.load("outputs/dd_C6_all_50_ld_20250617_152853/model_dtheta_dt.pkl")  
+# model_gamma = joblib.load("outputs/dd_C6_Y_1k_ld_20250617_193707/model_dgamma_dt.pkl")  
+# scaler_theta = joblib.load("outputs/dd_C6_all_50_ld_20250617_152853/scaler.pkl")  
+# scaler_gamma = joblib.load("outputs/dd_C6_Y_1k_ld_20250617_193707/scaler.pkl")
 
 # # # # === Define The Run Name ===
-# ranname = "C6_all_10k_20250416_103809"
-# # === Load Models and Scaler ===
-# model_theta = joblib.load("outputs/C6_all_10k_20250416_103809/model_dtheta_dt.pkl")  
-# model_gamma = joblib.load("outputs/C6_all_10k_20250416_103809/model_dgamma_dt.pkl")  
-# scaler_theta = joblib.load("outputs/C6_all_10k_20250416_103809/scaler.pkl")  
-# scaler_gamma = joblib.load("outputs/C6_all_10k_20250416_103809/scaler.pkl")
+ranname = "C6_all_10k_20250416_103809"
+# === Load Models and Scaler ===
+model_theta = joblib.load("outputs/C6_all_10k_20250416_103809/model_dtheta_dt.pkl")  
+model_gamma = joblib.load("outputs/C6_all_10k_20250416_103809/model_dgamma_dt.pkl")  
+scaler_theta = joblib.load("outputs/C6_all_10k_20250416_103809/scaler.pkl")  
+scaler_gamma = joblib.load("outputs/C6_all_10k_20250416_103809/scaler.pkl")
 
 # Cable parameters from experimental setup (Table I for cable 6)
 L = 3.0  # [m]
@@ -33,7 +33,7 @@ cable_wet_weight = 1.521  # [N] (From Table I, cable 6: wet weight=1.521N)
 
 
 # === Load and Preprocess Dataset ===
-file_name = "L_dynamique6y200dis2_0027.csv"
+file_name = "L_dynamique6x100dis2_0033.csv"
 
 output_dir = "Results/mode_test"
 output_path = pathlib.Path(output_dir)
@@ -43,15 +43,15 @@ output_path.mkdir(parents=True, exist_ok=True)
 file_path = pathlib.Path("Data") / file_name
 df = pd.read_csv(file_path)
 
-# Extract features for DD theta and gamma
-X_theta, _ = features_dd(df)
-X_gamma, _ = features_dd(df)
-y_dtheta_dt, y_dgamma_dt = compute_dderivatives(df)
+# # Extract features for DD theta and gamma
+# X_theta, _ = features_dd(df)
+# X_gamma, _ = features_dd(df)
+# y_dtheta_dt, y_dgamma_dt = compute_dderivatives(df)
 
-# # Extract features for D theta and gamma
-# X_theta = extract_features(df)
-# X_gamma = extract_features(df)
-# y_dtheta_dt, y_dgamma_dt = compute_derivatives(df)
+# Extract features for D theta and gamma
+X_theta = extract_features(df)
+X_gamma = extract_features(df)
+y_dtheta_dt, y_dgamma_dt = compute_derivatives(df)
 
 X_scaled_theta = scaler_theta.transform(X_theta)
 X_scaled_gamma = scaler_gamma.transform(X_gamma)
@@ -114,24 +114,24 @@ dgamma_pred = predict_gamma_custom(X_scaled_gamma)
 # gamma_error = gamma_true - gamma_est
 
 # Align time array with model output shape
-lags=2
+lags=0
 time_valid = df["Time"].values[lags:]
 theta_0 = df["Theta"].values[lags]
 gamma_0 = df["Gamma"].values[lags]
 
-# 1st integration
-dtheta_pred = cumulative_trapezoid(dtheta_pred, time_valid, initial=0)
-dgamma_pred = cumulative_trapezoid(dgamma_pred, time_valid, initial=0)
+# # 1st integration
+# dtheta_pred = cumulative_trapezoid(dtheta_pred, time_valid, initial=0)
+# dgamma_pred = cumulative_trapezoid(dgamma_pred, time_valid, initial=0)
 
-# 2nd integration
+# # 2nd integration
+# theta_est = theta_0 + cumulative_trapezoid(dtheta_pred, time_valid, initial=0)
+# gamma_est = gamma_0 + cumulative_trapezoid(dgamma_pred, time_valid, initial=0)
+
+# # 1st integration
 theta_est = theta_0 + cumulative_trapezoid(dtheta_pred, time_valid, initial=0)
 gamma_est = gamma_0 + cumulative_trapezoid(dgamma_pred, time_valid, initial=0)
 
-# # # 1st integration
-# theta_est = cumulative_trapezoid(dtheta_pred, time_valid, initial=0)
-# gamma_est = cumulative_trapezoid(dgamma_pred, time_valid, initial=0)
-
-# === Save predicted theta and gamma to original DataFrame ===
+# # === Save predicted theta and gamma to original DataFrame ===
 df_pred = df.copy()
 df_pred = df_pred.iloc[lags:].copy()  # align to valid time range
 df_pred["Theta_Pred"] = theta_est

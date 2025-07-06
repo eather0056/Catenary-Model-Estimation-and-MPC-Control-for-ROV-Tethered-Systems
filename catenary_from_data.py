@@ -39,6 +39,9 @@ ax.set_xlabel("X")
 ax.set_ylabel("Y")
 ax.set_zlabel("Z")
 
+error_accumulator = []
+
+
 # Real-time plotting loop
 frames = []
 for index, row in df.iterrows():
@@ -52,6 +55,10 @@ for index, row in df.iterrows():
     
     _, _, _, catenary_true = transform_catenary(P0, P1, catenary, theta, gamma)
     _, _, _, catenary_pred = transform_catenary(P0, P1, catenary, theta_pred, gamma_pred)
+    
+    errors = np.linalg.norm(catenary_true - catenary_pred, axis=1)  # Euclidean error per point
+    error_accumulator.append(errors)
+
 
     ax.clear()
     ax.set_xlim([-0.5, 1.5])
