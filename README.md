@@ -82,6 +82,6 @@ All generated outputs (models, plots, logs) are saved in:
 
 This work is conducted at COSMER Laboratory (EA 7398) and Laboratoire d’Informatique et Systemes (LIS, UMR CNRS 7020), Université de Toulon, supported by various cluster compute nodes and experimental setups.
 
-**Author**: [MD Ether Deowan](mailto:mdeowan698@sms-cluster)
+**Author**: [MD Ether Deowan](mailto:mdeowan698@sms-cluster), Nicolas BOIZOT
 
 
