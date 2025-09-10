@@ -9,7 +9,7 @@ from PIL import Image
 from main_fun import transform_catenary
 
 # === Load CSV ===
-datasetname = "L_dynamique6x100dis2_0033.csv"
+datasetname = "L_dynamique3y200dis2_0113.csv"
 data_path = f"Data/{datasetname}"
 df = pd.read_csv(data_path)
 
@@ -21,7 +21,7 @@ if 'Theta_Pred' not in df.columns or 'Gamma_Pred' not in df.columns:
 catenary = Catenary(length=3., reference_frame='ENU')
 
 # === Prepare output ===
-gif_path = f"catenary_simulation_{datasetname}.gif"
+gif_path = f"catenary_validation_{datasetname}.gif"
 temp_img = "temp_frame.png"
 
 # === Initialize error storage ===

@@ -1,16 +1,16 @@
 # This script 1 - directly use the data to animate the fully augmented catenary model import pandas as pd
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import pandas as pd
-from pympc.models.catenary import Catenary
-import time
-import imageio
 import os
+import time
+import imageio.v2 as imageio  # fixed import
+from pympc.models.catenary import Catenary
 from main_fun import transform_catenary
 
 # Load CSV file
-datasetname = "L_dynamique6x100dis2_0035.csv"
+datasetname = "L_dynamique3y200dis2_0113.csv"
 data_path = f"Data/{datasetname}"
 df = pd.read_csv(data_path)
 
@@ -75,14 +75,14 @@ for index, row in df.iterrows():
     ax.scatter(*P1, color='g', s=100, label="P1 (Cable Attach)")
     ax.legend()
     # inside your loop
-    # ax.view_init(elev=20, azim=45 + index * 0.5)
+    ax.view_init(elev=20, azim=45 + index * 0.5)
 
     
     frame_path = os.path.join(frames_folder, f"frame_{index:03d}.png")
-    plt.savefig(frame_path)
+    plt.savefig(frame_path, dpi=80)
     frames.append(frame_path)
     
-    plt.pause(0.05)
+    # plt.pause(0.05)
 
 # Convert saved frames to GIF
 gif_path = f"catenary_simulation_{datasetname}.gif"

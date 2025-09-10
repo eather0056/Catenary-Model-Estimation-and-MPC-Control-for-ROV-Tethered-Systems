@@ -11,21 +11,21 @@ from scipy.integrate import cumulative_trapezoid
 from numpy import cumsum
 
 # pathlib.PosixPath = pathlib.WindowsPath
-# # # === Define The Run Name ===
-# ranname = "final_test_dd_C6"
-# # === Load Models and Scaler ===
-# model_theta = joblib.load("outputs/dd_C6_all_50_ld_20250617_152853/model_dtheta_dt.pkl")  
-# model_gamma = joblib.load("outputs/dd_C6_Y_1k_ld_20250617_193707/model_dgamma_dt.pkl")  
-# scaler_theta = joblib.load("outputs/dd_C6_all_50_ld_20250617_152853/scaler.pkl")  
-# scaler_gamma = joblib.load("outputs/dd_C6_Y_1k_ld_20250617_193707/scaler.pkl")
-
-# # # # === Define The Run Name ===
-ranname = "C6_all_10k_20250416_103809"
+# # === Define The Run Name ===
+ranname = "final_test_dd_C6"
 # === Load Models and Scaler ===
-model_theta = joblib.load("outputs/C6_all_10k_20250416_103809/model_dtheta_dt.pkl")  
-model_gamma = joblib.load("outputs/C6_all_10k_20250416_103809/model_dgamma_dt.pkl")  
-scaler_theta = joblib.load("outputs/C6_all_10k_20250416_103809/scaler.pkl")  
-scaler_gamma = joblib.load("outputs/C6_all_10k_20250416_103809/scaler.pkl")
+model_theta = joblib.load("outputs/dd_C6_all_50_ld_20250617_152853/model_dtheta_dt.pkl")  
+model_gamma = joblib.load("outputs/dd_C6_Y_1k_ld_20250617_193707/model_dgamma_dt.pkl")  
+scaler_theta = joblib.load("outputs/dd_C6_all_50_ld_20250617_152853/scaler.pkl")  
+scaler_gamma = joblib.load("outputs/dd_C6_Y_1k_ld_20250617_193707/scaler.pkl")
+
+# # # # # === Define The Run Name ===
+# ranname = "C6_all_10k_20250416_103809"
+# # === Load Models and Scaler ===
+# model_theta = joblib.load("outputs/C6_all_10k_20250416_103809/model_dtheta_dt.pkl")  
+# model_gamma = joblib.load("outputs/C6_all_10k_20250416_103809/model_dgamma_dt.pkl")  
+# scaler_theta = joblib.load("outputs/C6_all_10k_20250416_103809/scaler.pkl")  
+# scaler_gamma = joblib.load("outputs/C6_all_10k_20250416_103809/scaler.pkl")
 
 # Cable parameters from experimental setup (Table I for cable 6)
 L = 3.0  # [m]
@@ -33,7 +33,7 @@ cable_wet_weight = 1.521  # [N] (From Table I, cable 6: wet weight=1.521N)
 
 
 # === Load and Preprocess Dataset ===
-file_name = "L_dynamique6x100dis2_0033.csv"
+file_name = "L_dynamique6y200dis1_0024.csv"
 
 output_dir = "Results/mode_test"
 output_path = pathlib.Path(output_dir)
@@ -44,14 +44,14 @@ file_path = pathlib.Path("Data") / file_name
 df = pd.read_csv(file_path)
 
 # # Extract features for DD theta and gamma
-# X_theta, _ = features_dd(df)
-# X_gamma, _ = features_dd(df)
-# y_dtheta_dt, y_dgamma_dt = compute_dderivatives(df)
+X_theta, _ = features_dd(df)
+X_gamma, _ = features_dd(df)
+y_dtheta_dt, y_dgamma_dt = compute_dderivatives(df)
 
 # Extract features for D theta and gamma
-X_theta = extract_features(df)
-X_gamma = extract_features(df)
-y_dtheta_dt, y_dgamma_dt = compute_derivatives(df)
+# X_theta = extract_features(df)
+# X_gamma = extract_features(df)
+# y_dtheta_dt, y_dgamma_dt = compute_derivatives(df)
 
 X_scaled_theta = scaler_theta.transform(X_theta)
 X_scaled_gamma = scaler_gamma.transform(X_gamma)
@@ -62,8 +62,8 @@ time = df["Time"].values
 
 #21, 23
 # === Choose Specific Equation by Index or Filter Criteria ===
-selected_eq_theta = model_theta.equations_[model_theta.equations_["complexity"] == 24].iloc[0]
-selected_eq_gamma = model_gamma.equations_[model_gamma.equations_["complexity"] == 26].iloc[0]
+selected_eq_theta = model_theta.equations_[model_theta.equations_["complexity"] == 21].iloc[0]
+selected_eq_gamma = model_gamma.equations_[model_gamma.equations_["complexity"] == 23].iloc[0]
 
 # Print selected equations
 print(f"\n[Custom] eq_dtheta_dt: {selected_eq_theta['equation']}")
@@ -114,22 +114,22 @@ dgamma_pred = predict_gamma_custom(X_scaled_gamma)
 # gamma_error = gamma_true - gamma_est
 
 # Align time array with model output shape
-lags=0
+lags=2
 time_valid = df["Time"].values[lags:]
 theta_0 = df["Theta"].values[lags]
 gamma_0 = df["Gamma"].values[lags]
 
-# # 1st integration
-# dtheta_pred = cumulative_trapezoid(dtheta_pred, time_valid, initial=0)
-# dgamma_pred = cumulative_trapezoid(dgamma_pred, time_valid, initial=0)
+# 1st integration
+dtheta_pred = cumulative_trapezoid(dtheta_pred, time_valid, initial=0)
+dgamma_pred = cumulative_trapezoid(dgamma_pred, time_valid, initial=0)
 
-# # 2nd integration
-# theta_est = theta_0 + cumulative_trapezoid(dtheta_pred, time_valid, initial=0)
-# gamma_est = gamma_0 + cumulative_trapezoid(dgamma_pred, time_valid, initial=0)
-
-# # 1st integration
+# 2nd integration
 theta_est = theta_0 + cumulative_trapezoid(dtheta_pred, time_valid, initial=0)
 gamma_est = gamma_0 + cumulative_trapezoid(dgamma_pred, time_valid, initial=0)
+
+# # # 1st integration
+# theta_est = theta_0 + cumulative_trapezoid(dtheta_pred, time_valid, initial=0)
+# gamma_est = gamma_0 + cumulative_trapezoid(dgamma_pred, time_valid, initial=0)
 
 # # === Save predicted theta and gamma to original DataFrame ===
 df_pred = df.copy()
@@ -154,6 +154,9 @@ gamma_error = gamma_true - gamma_est
 theta_r2_scores = []
 gamma_r2_scores = []
 
+nrmse_theta = np.sqrt(np.mean((theta_true - theta_est)**2)) / (theta_true.max() - theta_true.min())
+nrmse_gamma = np.sqrt(np.mean((gamma_true - gamma_est)**2)) / (gamma_true.max() - gamma_true.min())
+
 
 # === print these equeation ===
 print(f"\neq_dtheta_dt: {model_theta.get_best()}")
@@ -165,6 +168,10 @@ print(f"\neq_dgamma_dt: {model_gamma.get_best()}")
 # === R² Scores ===
 print(f"\nR² Score for Theta(t): {r2_score(theta_true, theta_est):.4f}")
 print(f"R² Score for Gamma(t): {r2_score(gamma_true, gamma_est):.4f}")
+
+# === nRMSE Scores ===
+print(f"\nnRMSE Score for Theta(t): {nrmse_theta:.4f}")
+print(f"nRMSE Score for Gamma(t): {nrmse_gamma:.4f}")
 
 # === Time-Series Plot ===
 plt.figure(figsize=(14, 8))
