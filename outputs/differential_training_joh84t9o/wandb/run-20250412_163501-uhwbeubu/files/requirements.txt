@@ -49,6 +49,6 @@ threadpoolctl==3.6.0
 typing_extensions==4.13.2
 typing-inspection==0.4.0
 tzdata==2025.2
-urllib3==2.4.0
+urllib3==2.6.0
 wandb==0.19.9
 wheel==0.45.1
