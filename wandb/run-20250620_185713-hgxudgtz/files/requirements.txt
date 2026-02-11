@@ -35,7 +35,7 @@ pydantic==2.11.3
 pandas==2.2.3
 GitPython==3.1.44
 wandb==0.19.9
-pillow==11.1.0
+pillow==12.1.1
 julia==0.6.2
 packaging==24.2
 kiwisolver==1.4.8
